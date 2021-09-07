@@ -1,10 +1,10 @@
 #! /bin/bash
 
-JOBNAME="mec2p-fish-8-11-auditory"                              # Can be anything unique
-INPUTFOLDER="/QRISdata/Q4070/SPIM/Resliced/Auditory/fish8_11"   # A folder containing individual folders for each fish
-OUTPUTFOLDER="/QRISdata/Q4008/s2p_slices/auditory/fish8_11"     # An output folder where the finish fish folders will go
-JOBTYPE='fish-whole'                                            # The type of job, for now leave this as fish-whole
-S2PCONFIG='ops_1P_slices.json'                                  # Path to a json file containing the ops for suite2p
+JOBNAME="test-hpc-pipeline"                             # Can be anything unique
+INPUTFOLDER="/QRISdata/Q2396/SPIM_120170/Spontaneous"   # A folder containing individual folders for each fish
+OUTPUTFOLDER="/QRISdata/Q4008/Q2396/Spontaneous"        # An output folder where the finish fish folders will go
+JOBTYPE='fish-whole'                                    # The type of job, for now leave this as fish-whole
+S2PCONFIG='ops_1P_whole.json'                           # Path to a json file containing the ops for suite2p
 
 ## COMMENTS
 # You can add any comments about this job here. e.g. testing tau = 1.5.
