@@ -109,7 +109,7 @@ Once you are sure the details are correct you can launch the job by typing
 ```
 ./launch_TEMPLATE.sh
 ```
-The program will start running in the background, if you check the `qstat` command on Awoonga you will soon see jobs starting.
+The program will start running in the background, if you check the `qstat` command on Awoonga you will soon see jobs starting. If you get a permissoion denied error message see the additional information.
 
 
 ## Checking on a job or debugging
@@ -127,7 +127,14 @@ which will just paste the whole log to the screen, alternatively you could use `
 
 ## Additional information about the hpc_pipeline
 
-# Avoiding nano
+### Permission denied when launching a job
+If you tried to run a launch file (e.g. `./launch_TEMPLATE.sh`) and got a permission denied error, you may need to make the file executable, try the following (substituting the filename for whatever file you were trying to run
+```
+chmod a+x launch_TEMPLATE.sh
+```
+You should now be able to execute the file.
+
+### Avoiding nano
 If you prefer not to use nano you can instead copy the file to your local computer, edit it in whatever program you prefer, and then transfer the editted file back to the server.
 To do this you will need to use FileZilla, if you don't have it installed you can download it [here](https://filezilla-project.org/).
 Open FileZilla, click on 'File' > 'Site Manager ...', a window will pop up.
@@ -135,7 +142,7 @@ Change the Protocol to 'SFTP - SSH File Transfer Protocol' and for the hostname 
 
 Once connected the left panel shows the files on your local computer and the right panel shows the files on the server, to copy files from one computer to the other just double click on the file or click and drag from one side to the other. 
 
-# External server
+### External server
 The restarting functionality of the hpc_pipeline is provided by the hpc_pipeline.py file which should be run on a server seperate to the computing cluster. Originally this server was the a zone provided by the Faculty of EAIT, see [https://help.eait.uq.edu.au/smartos/](https://help.eait.uq.edu.au/smartos/). Each time a job is started it moves into the background on the control server, it will check on the computing cluster every 6 hours and restart any jobs that have failed. 
 The server communicates with the HPC cluster by setting up an SSH connection using paramiko, it then executes varios bash commands on the cluster to launch jobs and monitor the state of jobs. 
 
