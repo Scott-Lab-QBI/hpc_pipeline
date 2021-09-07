@@ -88,7 +88,7 @@ ssh-copy-id ${UQUSERNAME}@awoonga.qriscloud.org.au
 ```
 
 ## Launch a job
-The previous steps only need to be completed once to initially set up the hpc_pipeline. To use pipeline, log into the command server through ssh (using PuTTY), the hostname is (`uqjarno4-zfish.zones.eait.uq.edu.au`) 
+The previous steps only need to be completed once to initially set up the hpc_pipeline. To use the pipeline, we just need to specify the details of the job to be run and then to start the job using a launch file. To do this log into the command server through ssh (using PuTTY), the hostname is (`uqjarno4-zfish.zones.eait.uq.edu.au`) 
 
 Change into the pipeline directory 
 ```
@@ -136,12 +136,6 @@ Change the Protocol to 'SFTP - SSH File Transfer Protocol' and for the hostname 
 Once connected the left panel shows the files on your local computer and the right panel shows the files on the server, to copy files from one computer to the other just double click on the file or click and drag from one side to the other. 
 
 # External server
-The restarting functionality of Pipelina is provided by the zfishcommand.py file which should be run on a server seperate to the computing cluster. Originally this server was the a zone provided by the Faculty of EAIT, see [https://help.eait.uq.edu.au/smartos/](https://help.eait.uq.edu.au/smartos/)
-Example command to start zfishcommand: 
-nohup python3 zfishcommand.py /QRISdata/Q4070/SPIM/Raw/Spontaneous/ /QRISdata/Q4008/MECP2/spont/fish8_11 2 fish811spontFull >>fish811spontFull.txt 2>&1 &
-Note, this will also keep the command server running after that particular terminal closes. 
-
+The restarting functionality of the hpc_pipeline is provided by the hpc_pipeline.py file which should be run on a server seperate to the computing cluster. Originally this server was the a zone provided by the Faculty of EAIT, see [https://help.eait.uq.edu.au/smartos/](https://help.eait.uq.edu.au/smartos/). Each time a job is started it moves into the background on the control server, it will check on the computing cluster every 6 hours and restart any jobs that have failed. 
 The server communicates with the HPC cluster by setting up an SSH connection using paramiko, it then executes varios bash commands on the cluster to launch jobs and monitor the state of jobs. 
 
-# On the HPC
-The typical structure on the HPC conists of a HPC_run_{file}.py python file. The python file creates and then submits a pbspro script. 
