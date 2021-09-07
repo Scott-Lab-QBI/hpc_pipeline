@@ -39,10 +39,10 @@ These should print your username and school string.
 
 
 ### Install Suite2p
-We will need to download the code for [Suite2p](https://github.com/MouseLand/suite2p), but first we will make sure we are in the home directory, enter the following commands into the PuTTY window
+We will need to download the code for [Suite2p](https://github.com/Scott-Lab-QBI/suite2p.git), but first we will make sure we are in the home directory, enter the following commands into the PuTTY window
 ```
 cd ~/
-git clone https://github.com/MouseLand/suite2p.git
+git clone https://github.com/Scott-Lab-QBI/suite2p.git
 ```
 Now lets go into the Suite2p folder and set up the an Anaconda environment, copy the following commands, agree to the installation instructions and default locations
 ```
@@ -58,10 +58,9 @@ conda activate suite2p
 ### Download the hpc_pipeline
 To install the hpc_pipeline on Awoonga we will first need to go back to the home directory and then download the code
 
-## TODO : Update with a public link to hpc_pipeline, also other link lower
 ```
 cd ~/
-git clone git@github.com:Scott-Lab-QBI/hpc_pipeline.git
+git clone https://github.com/Scott-Lab-QBI/hpc_pipeline.git
 ```
 
 ## Set up the hpc_pipeline on command server
