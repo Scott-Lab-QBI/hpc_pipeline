@@ -1,0 +1,23 @@
+{
+    "nplanes": 50,
+    "tau": 1.4,
+    "fps":2,
+    "fs": 0.04,
+    "save_mat": 1,
+    "batch_size": 2000,
+    "1Preg": true,
+    "pre_smooth": 2,
+    "spatial_taper": 5,
+    "diameter": [
+        3,
+        4
+    ],
+    "threshold_scaling": 0.5,
+    "max_iterations": 100,
+    "inner_neuropil_radius": 1,
+    "min_neuropil_pixels": 1,
+    "sparse_mode": false,
+    "spikedetect": false,
+    "smooth_sigma": 4,
+    "high_pass": 30
+}
