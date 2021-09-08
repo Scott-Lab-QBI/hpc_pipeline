@@ -94,6 +94,7 @@ def main():
 
         ## remove finished jobs from incomplete jobs
         [incomplete_jobs.remove(job) for job in finished_jobs]
+        finished_jobs = []
 
         ## Wait some time before checking again
         time.sleep(WAITTIME)    
