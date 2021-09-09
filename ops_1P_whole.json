@@ -1,8 +1,8 @@
 {
     "nplanes": 50,
     "tau": 1.4,
-    "fps":2,
-    "fs": 0.04,
+    "fps":100,
+    "fs": 2,
     "save_mat": 1,
     "batch_size": 2000,
     "1Preg": true,
