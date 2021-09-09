@@ -87,6 +87,14 @@ ssh-keygen -t ed25519
 ssh-copy-id ${UQUSERNAME}@awoonga.qriscloud.org.au
 ```
 
+### Install hpc_pipeline dependencies
+The hpc_pipeline communicates with the HPC over ssh using paramiko, to install paramiko execute the following commands
+```
+pip install --upgrade pip
+pip install setuptools-rust
+pip install paramiko
+```
+
 ## Launch a job
 The previous steps only need to be completed once to initially set up the hpc_pipeline. To use the pipeline, we just need to specify the details of the job to be run and then to start the job using a launch file. To do this log into the command server through ssh (using PuTTY), the hostname is (`uqjarno4-zfish.zones.eait.uq.edu.au`) 
 
@@ -133,6 +141,9 @@ If you tried to run a launch file (e.g. `./launch_TEMPLATE.sh`) and got a permis
 chmod a+x launch_TEMPLATE.sh
 ```
 You should now be able to execute the file.
+
+### Add section about vscode
+TODO
 
 ### Avoiding nano
 If you prefer not to use nano you can instead copy the file to your local computer, edit it in whatever program you prefer, and then transfer the editted file back to the server.
