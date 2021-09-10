@@ -11,12 +11,17 @@ S2PCONFIG='ops_1P_whole.json'                           # Path to a json file co
 # This comments will get saved in a .txt file with the same name as the log file.
 
 ## The below shouldn't need editing in normal use
-
-echo "------------------------------------------" >>${JOBNAME}.txt
-date >>${JOBNAME}.txt
-cat ${0##*/} >>${JOBNAME}.txt  # copy this file into "jobname".txt
-echo "s2p file:" >>${JOBNAME}.txt
-cat $S2PCONFIG >>${JOBNAME}.txt
+LOGDIR="logs"
+if [[ ! -d $LOGDIR ]]; then 
+    echo "Log diretory $LOGDIR, doesn't exist, creating..."
+    mkdir $LOGDIR
+fi
+LOGFILE="${LOGDIR}/${JOBNAME}.txt"
+echo "------------------------------------------" >>$LOGFILE
+date >>$LOGFILE
+cat ${0##*/} >>$LOGFILE  # copy this file into "logs/jobname".txt
+echo "s2p file:" >>$LOGFILE
+cat $S2PCONFIG >>$LOGFILE
 
 # Actually start monitoring
-nohup python3 hpc_pipeline.py -j $JOBTYPE -i $INPUTFOLDER -o $OUTPUTFOLDER -s $S2PCONFIG  ${JOBNAME} >>${JOBNAME}.txt 2>&1 &
+nohup python3 hpc_pipeline.py -j $JOBTYPE -i $INPUTFOLDER -o $OUTPUTFOLDER -s $S2PCONFIG  ${JOBNAME} >>$LOGFILE 2>&1 &
