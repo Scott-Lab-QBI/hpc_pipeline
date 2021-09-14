@@ -38,7 +38,7 @@ def main():
 											 # (or folder of folders with tiffs if look_one_level_down is True, or subfolders is not empty)         
 	  'fast_disk': os.environ["TMPDIR"], # string which specifies where the binary file will be stored (should be an SSD)
 	  'save_folder': fish_output_path,
-      #'classifier_path': "~/pipelina/classifierAG.npy",
+      'classifier_path': "~/hpc_pipeline/classifierAG.npy",
 	}
 
     ## Debugging 
