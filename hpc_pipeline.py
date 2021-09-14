@@ -35,7 +35,7 @@ def main():
     args = parser.parse_args()
 
     ## Initialise logging
-    logging.basicConfig(filename=f'{args.name}.log', level=logging.INFO)
+    logging.basicConfig(filename=f'logs/{args.name}.log', level=logging.INFO)
     logging.info('-' * 60)
     logging.info(f'{datetime.datetime.now()}                   Launch pipeline')
     logging.info('-' * 60)
@@ -92,8 +92,18 @@ def main():
             # else, not running and not finished, so restart
             job.start_job()
 
-        ## remove finished jobs from incomplete jobs
-        [incomplete_jobs.remove(job) for job in finished_jobs]
+        ## remove finished jobs from incomplete jobs, start follow on jobs
+        for job in finished_jobs:
+
+            # If there is a job to do after this one, lets schedule it
+            next_job = job.get_next_job()
+            if next_job:
+                next_job.start()
+                incomplete_jobs.append(next_job)
+
+            incomplete_jobs.remove(job)
+            
+        #[incomplete_jobs.remove(job) for job in finished_jobs]
         finished_jobs = []
 
         ## Wait some time before checking again
@@ -244,6 +254,7 @@ class HPCJob:
     def __init__(self, ssh):
         self.job_ids = []
         self.ssh = ssh
+        self.next_job = None
 
     def get_latest_job_id(self):
         """ Return the job id of the latest job that was sent to the HPC
@@ -259,7 +270,17 @@ class HPCJob:
         """ Returns True iff the stopping criteria for this job are met
         """
         raise NotImplementedError
-    
+
+    def followed_by(self, job):
+        """
+        """
+        self.next_job = job
+
+    def get_next_job(self):
+        """
+        """
+        return self.next_job
+
     def __str__(self):
         return f'HPCJob({self.job_ids})'
 
