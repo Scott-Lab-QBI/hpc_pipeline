@@ -351,6 +351,7 @@ class FullFishs2p(HPCJob):
         total_files_expected = (nplanes * self.FILESPERFISH) + self.FILESPERFISH + 1
 
         logging.info(f'For fish found: {num_files_found} files, Of {total_files_expected} expected')
+        assert num_files_found < total_files_expected, f"Found more files ({num_files_found}) than expected ({total_files_expected}), unclear what to do, exiting."
         return total_files_expected == num_files_found
 
     def __repr__(self):
