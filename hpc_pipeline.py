@@ -347,7 +347,8 @@ class FullFishs2p(HPCJob):
 
         nplanes = self.s2p_ops.get('nplanes')
         assert nplanes is not None, f"nplanes not found in config file: {self.s2p_config_json}"
-        total_files_expected = (nplanes * self.FILESPERFISH) + 1 # +1 for the original directory
+        # 8 files per plane (inc. planex dir) +8 for combined plane, +1 for the original directory
+        total_files_expected = (nplanes * self.FILESPERFISH) + self.FILESPERFISH + 1
 
         logging.info(f'For fish found: {num_files_found} files, Of {total_files_expected} expected')
         return total_files_expected == num_files_found
