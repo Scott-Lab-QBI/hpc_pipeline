@@ -18,13 +18,14 @@ args = parser.parse_args()
 fish_folder = os.path.normpath(args.fish_abs_path)
 fish_output_folder = os.path.normpath(args.output_directory)
 fish_num = os.path.basename(fish_folder).split('fish')[1].split('_')[0]
+job_name = args.s2p_config_json.split('_ops_1P_whole.json')[0]
 
 ## Define variables needed for file
 users_school = os.getenv('UQSCHOOL')
 
 ## Build pbs script 
 file_contents = f"""#!/bin/bash
-#PBS -N pplna{fish_num}
+#PBS -N {fish_num}_{job_name}
 #PBS -A {users_school}
 #PBS -l select=1:ncpus=12:mem=110GB:vmem=110GB
 #PBS -l walltime=24:00:00
