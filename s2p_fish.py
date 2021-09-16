@@ -38,13 +38,17 @@ def main():
 											 # (or folder of folders with tiffs if look_one_level_down is True, or subfolders is not empty)         
 	  'fast_disk': os.environ["TMPDIR"], # string which specifies where the binary file will be stored (should be an SSD)
 	  'save_folder': fish_output_path,
-      'classifier_path': "~/hpc_pipeline/classifierAG.npy",
 	}
 
-    ## Debugging 
-    print(f'-------------  {os.path.basename(input_fish_folder)}  -------------')
-    print(f'ops: {ops}')
-    print(f'db: {db}')
+    # classify path cannot have a ~ in it, so we need to swap ~ for users
+    # home directory
+    if ops.get('classifier_path'):
+        if '~' in ops.get('classifier_path'):
+            home_dir = os.path.expanduser('~')
+            ops['classifier_path'] = ops.get('classifier_path').replace('~', home_dir)
+            print(f"Updated classifer path to: {ops['classifier_path']}")
+
+    print("OPS:", ops)
 
     ## Run suite2p
     opsEnd=suite2p.run_s2p(ops=ops,db=db)
