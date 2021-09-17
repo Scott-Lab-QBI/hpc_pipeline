@@ -267,6 +267,52 @@ class HPCJob:
         return str(self)
 
 
+class Warp2Zbrains(HPCJob):
+    """ Warp a completed suite2p fish to Zbrain coordinates
+    
+        Rough actions:
+            - Warp suite2p motion corrected meanImg to template
+            - Convert suite2p output to csv list
+            - Warp csv list to template
+            - warp points again to zbrain
+    """
+
+    def __init__(self, ssh, fish_abs_path, base_output_folder):
+        """ 
+        Args:
+            ssh: An open ssh connection
+            fish_abs_path: Absolute path to folder containing one or more .tif 
+              files
+            base_output_folder: Absolute path where results from ANTs should be
+              saved.
+        """
+        super().__init__(ssh)
+        self.fish_abs_path = fish_abs_path
+        self.base_output_folder = base_output_folder
+
+    def start_job(self):
+        ## Warp suite2p motion corrected meanImg to template
+
+        ## Convert suite2p output to csv list
+        self._write_csv()
+
+
+
+        ## Warp original csv list to template space
+
+        ## Warp points in csv space to zbrains space
+
+
+
+
+
+    def is_finished(self):
+        """ Will check if final zbrains files exist
+        """
+        pass
+
+
+
 class FullFishs2p(HPCJob):
     """ Run a full fish through suite2p using arguments from specified config 
         file 
@@ -281,9 +327,9 @@ class FullFishs2p(HPCJob):
         """ 
         Args:
             ssh: An open ssh connection
-            input_folder: Absolute path to folder containing one or more .tif 
+            fish_abs_path: Absolute path to folder containing one or more .tif 
               files
-            output_folder: Absolute path where results from suite2p should be
+            base_output_folder: Absolute path where results from suite2p should be
               saved. Each fish will create its own directory at this path.
             s2p_config_json: A json config file containing suite2p options
         """
