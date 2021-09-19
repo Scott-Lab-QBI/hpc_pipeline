@@ -24,20 +24,32 @@ job_name = args.s2p_config_json.split('_ops_1P_whole.json')[0]
 with open(args.planes_left_json, 'r') as fp:
     planes_left = json.load(fp)
 num_planes = len(planes_left)
-assert num_planes > 1, "TODO : consider the planes == 1 case"
 
 ## Define variables needed for file
 users_school = os.getenv('UQSCHOOL')
+
+# pbs will error if only 1 file in array, add fake job if needed
+array_size = num_planes
+if num_planes == 1:
+    array_size = 2
 
 ## Build pbs script 
 file_contents = f"""#!/bin/bash
 #PBS -N {fish_num}_{job_name}
 #PBS -A {users_school}
-#PBS -l select=1:ncpus=1:mem=5GB:vmem=5GB
-#PBS -l walltime=5:00:00
+#PBS -l select=1:ncpus=4:mem=25GB:vmem=25GB
+#PBS -l walltime=1:00:00
 #PBS -j oe
 #PBS -k doe
-#PBS -J 1-{num_planes}
+#PBS -J 1-{array_size}
+
+# Deal with only 1 slice left to do case
+if [ {num_planes} -eq 1 ]; then
+    if [ {array_size} -eq ${{PBS_ARRAY_INDEX}} ]; then
+        echo "This is the fake job to allow array, exiting."
+        exit
+    fi
+fi
 
 module load anaconda
 source activate suite2p
@@ -46,7 +58,7 @@ for fish_tif in `ls {fish_folder}/*.tif`; do
     /usr/local/bin/recall_medici $fish_tif
 done
 
-python ~/hpc_pipeline/s2p_fish_sliced.py {fish_folder} {fish_output_folder} {args.s2p_config_json} {args.planes_left} ${{PBS_ARRAY_INDEX}}
+python ~/hpc_pipeline/s2p_fish_sliced.py {fish_folder} {fish_output_folder} {args.s2p_config_json} {args.planes_left_json} ${{PBS_ARRAY_INDEX}}
 """
 
 
