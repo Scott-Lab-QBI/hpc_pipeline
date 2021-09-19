@@ -14,7 +14,7 @@ import shutil
 import datetime
 
 # How long to wait before checking on running jobs
-WAITTIME = 6 * 60 * 60
+WAITTIME = 3 * 60 * 60
 # HPC ssh address to use
 HPCHOSTNAME='awoonga.qriscloud.org.au'
 # HPC user account to use, set as environment variable
@@ -400,7 +400,7 @@ class FullFishs2p(HPCJob):
     def start_job(self):
         launch_job = f'python ~/hpc_pipeline/submit_fish_job.py {self.fish_abs_path} {self.fish_output_folder} {self.s2p_config_json}'
 
-        self.do_qsub_check_errors(self, launch_job)
+        self.do_qsub_check_errors(launch_job)
 
     def is_finished(self):
         """ Check if a fish has finished all processing
@@ -423,11 +423,11 @@ class FullFishs2p(HPCJob):
 
         nplanes = self.s2p_ops.get('nplanes')
         assert nplanes is not None, f"nplanes not found in config file: {self.s2p_config_json}"
-        # 8 files per plane (inc. planex dir) +8 for combined plane, +1 for the original directory
-        total_files_expected = (nplanes * self.FILESPERFISH) + self.FILESPERFISH + 1
+        # 8 files per plane (inc. planex dir) +1 for the original directory
+        total_files_expected = (nplanes * self.FILESPERFISH) + 1
 
         logging.info(f'For fish found: {num_files_found} files, Of {total_files_expected} expected')
-        assert num_files_found < total_files_expected, f"Found more files ({num_files_found}) than expected ({total_files_expected}), unclear what to do, exiting."
+        assert num_files_found <= total_files_expected, f"Found more files ({num_files_found}) than expected ({total_files_expected}), unclear what to do, exiting."
         return total_files_expected == num_files_found
 
     def __repr__(self):
@@ -442,7 +442,7 @@ class ParallelFishs2p(FullFishs2p):
         ## Collect a list of planes that still need to be done
         find_iscells = f'find {self.fish_output_folder} | grep iscell.npy'
         found_files = run_command(self.ssh, find_iscells)
-        logging.info(f'found_files: {found_files}')
+        #logging.info(f'found_files: {found_files}')
 
         # Check which planes don't have an iscell.npy
         self.planes_left = [str(x) for x in range(self.s2p_ops.get('nplanes'))]
@@ -455,7 +455,8 @@ class ParallelFishs2p(FullFishs2p):
         contents = json.dumps(self.planes_left)
         # TODO : pass exp_name explicitly shouldn't be splitting from filename like this
         exp_name = self.s2p_config_json.split('_ops_1P_whole.json')[0]
-        planes_left_json = f'planes_left_{exp_name}.json'
+        fish_num = os.path.basename(self.fish_abs_path).split('fish')[1].split('_')[0]
+        planes_left_json = f'{exp_name}_fish{fish_num}_planes_left.json'
         with open(planes_left_json, 'w') as fp:
             fp.write(contents)
 
@@ -466,14 +467,14 @@ class ParallelFishs2p(FullFishs2p):
         ## Launch and check array
         launch_job = f'python ~/hpc_pipeline/submit_fish_sliced_job.py {self.fish_abs_path} {self.fish_output_folder} {self.s2p_config_json} {planes_left_json}'
 
-        logging.log('Would do qsub here but just testing.')
-        #self.do_qsub_check_errors(self, launch_job)
+        #logging.info(f'Would do qsub here but just testing.\n {launch_job}')
+        self.do_qsub_check_errors(launch_job)
 
 class SlicedFishs2p(HPCJob):
     """ Run a sliced fish through suite2p using arguments from specified config
         file 
     """
-    FILESPERSLICE = 9
+    FILESPERSLICE = 9 # TODO : might change if data.bin is saved also. 
     def __init__(self, ssh, slice_folder, base_output_folder, s2p_config_json, exp_name):
         """ 
         Args:

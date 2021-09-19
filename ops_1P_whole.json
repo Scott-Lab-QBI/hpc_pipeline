@@ -19,5 +19,7 @@
     "sparse_mode": true,
     "spikedetect": false,
     "smooth_sigma": 4,
-    "high_pass": 30
+    "high_pass": 30,
+    "combined": false,
+    "classifier_path": "~/hpc_pipeline/classifierAG.npy"
 }
