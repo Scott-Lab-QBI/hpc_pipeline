@@ -48,7 +48,7 @@ def main():
     db = {'look_one_level_down': True, # whether to look in ALL subfolders when searching for tiffs
 	  'data_path': [input_fish_folder], # a list of folders with tiffs 
 											 # (or folder of folders with tiffs if look_one_level_down is True, or subfolders is not empty)         
-	  'fast_disk': f"/scratch/user/{os.getenv('UQUSERNAME')}/hpc_pipeline/{job_name}_fish{fish_num}", # string which specifies where the binary file will be stored (should be an SSD)
+	  'fast_disk': f"/scratch/user/{os.getenv('UQUSERNAME')}/hpc_pipeline/{job_name}/{os.path.basename(fish_folder)}", # string which specifies where the binary file will be stored (should be an SSD)
 	  'save_folder': fish_output_path,
 	}
 
