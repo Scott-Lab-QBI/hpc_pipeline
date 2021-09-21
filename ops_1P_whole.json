@@ -16,7 +16,7 @@
     "max_iterations": 100,
     "inner_neuropil_radius": 1,
     "min_neuropil_pixels": 1,
-    "sparse_mode": true,
+    "sparse_mode": false,
     "spikedetect": false,
     "smooth_sigma": 4,
     "high_pass": 30,
