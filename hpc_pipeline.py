@@ -89,6 +89,8 @@ def main():
         ## for each incomplete job
         for job in incomplete_jobs:
 
+            job.log_status()
+
             ## if job is still running, skip for now
             if job.get_latest_job_id() in running_jobs:
                 logging.info(f'Still running, skip {job}')
@@ -153,7 +155,7 @@ def create_whole_fish_s2p_jobs(ssh, input_folder, output_folder, s2p_config_json
     input_folder = os.path.normpath(input_folder)
 
     # TODO : hack to only process some of q2396 fish (just grab some)
-    # all_fish = all_fish[18:25]
+    # all_fish = all_fish[4:6]
 
     fish_jobs = []
     for fish_base_name in all_fish:
@@ -317,6 +319,9 @@ class HPCJob:
     def __repr__(self):
         return str(self)
 
+    def log_status(self):
+        pass
+
 
 class Warp2Zbrains(HPCJob):
     """ Warp a completed suite2p fish to Zbrain coordinates
@@ -437,6 +442,9 @@ class FullFishs2p(HPCJob):
 class ParallelFishs2p(FullFishs2p):
     """ This will be for running a whole fish but as individual planes
     """
+    def __init__(self, ssh, fish_abs_path, base_output_folder, s2p_config_json):
+        super().__init__(ssh, fish_abs_path, base_output_folder, s2p_config_json)
+        self.planes_left = [str(x) for x in range(self.s2p_ops.get('nplanes'))]
 
     def start_job(self):
         ## Collect a list of planes that still need to be done
@@ -469,6 +477,16 @@ class ParallelFishs2p(FullFishs2p):
 
         #logging.info(f'Would do qsub here but just testing.\n {launch_job}')
         self.do_qsub_check_errors(launch_job)
+
+        self.log_status()
+
+    def log_status(self):
+        ## Log fish status so can be reported
+        fish_num = os.path.basename(self.fish_abs_path).split('fish')[1].split('_')[0]
+        planes_left = self.s2p_ops.get('nplanes') - len(self.planes_left)
+        total_planes = self.s2p_ops.get('nplanes')
+        percent_done = planes_left / self.s2p_ops.get('nplanes')
+        logging.info(f"FISH_STATUS: fish_{fish_num}, {planes_left}/{total_planes} planes, {int(percent_done * 100)}% done, Latest Awoonga id: {self.get_latest_job_id()}[]")
 
 class SlicedFishs2p(HPCJob):
     """ Run a sliced fish through suite2p using arguments from specified config
