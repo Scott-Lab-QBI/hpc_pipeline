@@ -47,7 +47,7 @@ def main():
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(HPCHOSTNAME, username=USERNAME)
 
-        job_ids = [x.split(' ')[-1].strip() for x in data_to_kill[1]]
+        job_ids = [x.split(' ')[-1].strip() for x in data_to_kill[1] if 'None' not in x]
         job_ids_string = ' '.join(job_ids)
         awoonga_kill_string = f"qdel {job_ids_string}"
         print('Awoonga kill string:', awoonga_kill_string)
