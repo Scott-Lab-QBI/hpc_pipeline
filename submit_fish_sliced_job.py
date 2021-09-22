@@ -38,7 +38,7 @@ file_contents = f"""#!/bin/bash
 #PBS -N {fish_num}_{job_name}
 #PBS -A {users_school}
 #PBS -l select=1:ncpus=4:mem=110GB:vmem=110GB
-#PBS -l walltime=05:00:00
+#PBS -l walltime=12:00:00
 #PBS -j oe
 #PBS -k doe
 #PBS -J 1-{array_size}
