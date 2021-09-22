@@ -5,9 +5,8 @@
 import paramiko
 import argparse
 import json
-from subprocess import call
+import subprocess
 import os
-from check_pipeline import *
 
 # HPC ssh address to use
 HPCHOSTNAME='awoonga.qriscloud.org.au'
@@ -58,7 +57,7 @@ def main():
     
     ## Kill local job
     #print(f"kill -9 {pid}")
-    call([f"kill -9 {pid}"], shell=True)
+    subprocess.call([f"kill -9 {pid}"], shell=True)
 
 def print_status(do_print=True):
     try:
