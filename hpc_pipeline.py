@@ -26,7 +26,7 @@ def main():
 
     ## Process input arguments
     parser = argparse.ArgumentParser(description="Launch and monitor computational jobs on a remote server.")
-    parser.add_argument('-j', '--job-type', help='The type of HPC job to run', type=str, choices=['fish-whole', 'fish-slices', 'slice-whole', 'fish-parallel'], default='fish-whole')
+    parser.add_argument('-j', '--job-type', help='The type of HPC job to run', type=str, choices=['fish-whole', 'fish-slices', 'slice-whole', 'fish-parallel', 'ants-zbrain'], default='fish-whole')
     parser.add_argument('-s', '--s2p-config-json', help='Suite2p json config file', type=str)
     parser.add_argument('-i', '--input-folder', help='Folder containing input data', type=str)
     parser.add_argument('-o', '--output-folder', help='Folder where output should be saved', type=str)
@@ -73,6 +73,9 @@ def main():
     elif args.job_type == 'slice-whole':
         print('Doing slice-whole (will reslice fish then process)')
         raise NotImplementedError()
+
+    elif args.job_type == 'ants-zbrain':
+        pass
 
     else:
         print('Job type not recognised.')
@@ -347,16 +350,9 @@ class Warp2Zbrains(HPCJob):
         self.base_output_folder = base_output_folder
 
     def start_job(self):
-        ## Warp suite2p motion corrected meanImg to template
 
-        ## Convert suite2p output to csv list
-        self._write_csv()
-
-
-
-        ## Warp original csv list to template space
-
-        ## Warp points in csv space to zbrains space
+        pass
+    
 
 
 
@@ -446,7 +442,7 @@ class ParallelFishs2p(FullFishs2p):
         super().__init__(ssh, fish_abs_path, base_output_folder, s2p_config_json)
         self.planes_left = [str(x) for x in range(self.s2p_ops.get('nplanes'))]
 
-    def start_job(self):
+    def _update_planes_left(self):
         ## Collect a list of planes that still need to be done
         find_iscells = f'find {self.fish_output_folder} | grep iscell.npy'
         found_files = run_command(self.ssh, find_iscells)
@@ -458,6 +454,12 @@ class ParallelFishs2p(FullFishs2p):
             plane_num = plane.split('/plane')[1].split('/')[0]
             self.planes_left.remove(plane_num)
         logging.info(f'Planes left: {self.planes_left}')
+
+
+
+    def start_job(self):
+
+        self._update_planes_left()
 
         ## Create json file of planes left to do
         contents = json.dumps(self.planes_left)
@@ -481,6 +483,7 @@ class ParallelFishs2p(FullFishs2p):
         self.log_status()
 
     def log_status(self):
+        self._update_planes_left()
         ## Log fish status so can be reported
         fish_num = os.path.basename(self.fish_abs_path).split('fish')[1].split('_')[0]
         planes_left = self.s2p_ops.get('nplanes') - len(self.planes_left)
