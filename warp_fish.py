@@ -9,6 +9,7 @@ import os
 import argparse
 import re
 import warnings
+from subprocess import call
 
 
 def main():
@@ -20,28 +21,60 @@ def main():
 
     fish_num = os.path.basename(args.fish_abs_path).split('fish')[1].split('_')[0]
 
-    ## Create fish's individual warp coords
+    ## Create fish's individual meanImg of suite2p activity (as nrrd)
     output_nrrd = os.path.join(args.output_directory, f'mean_stack_{fish_num}.nrrd')
-    print(output_nrrd)
-    make_single_stack(args.fish_abs_path, output_nrrd)
-    return
+    if not os.path.isfile(output_nrrd):
+        print('make suite2p mean image stack', output_nrrd)
+        make_meanImg_stack(args.fish_abs_path, output_nrrd)
+    else:
+        print(f"Fish meanImg stack existed, skipping. output name: {output_nrrd}")
 
-    ## Create csv if not there
-    output_csv = os.path.join(args.output_directory, f'ROIs_{fish_num}.csv')
+
+    ## Warp fish meanImg to template space to get warp matrices
+    # Following process in 'register_brains_to_template.ipynb'
+    fixed_image = '/QRISdata/Q2396/ForANTs/MW_Synchotrontemplate.nrrd' # the template
+    moved_image = output_nrrd  # The fish 
+    output_name = os.path.join(args.output_directory, f'antReg_{fish_num}')
+    affine_matrix = f'{output_name}0GenericAffine.mat'
+
+    if not os.path.isfile(affine_matrix):
+        job_string = """antsRegistration -d 3 --float 1 -o ["""+output_name+""", """+output_name+""".nii] -n WelchWindowedSinc --winsorize-image-intensities [0.01,0.99] --use-histogram-matching 1 -r ["""+fixed_image+""","""+moved_image+""", 1] -t rigid[0.1] -m MI["""+fixed_image+""","""+moved_image+""",1,32, Regular,0.5] -c [1000x500x500x500,1e-8,10] --shrink-factors 8x4x2x1 --smoothing-sigmas 2x1x1x0vox -t Affine[0.1] -m MI["""+fixed_image+""","""+moved_image+""",1,32, Regular,0.5] -c [1000x500x500x500,1e-8,10] --shrink-factors 8x4x2x1 --smoothing-sigmas 2x1x1x0vox -t SyN[0.05,6,0.5] -m CC["""+fixed_image+""","""+moved_image+""",1,2] -c [1000x500x500x500x500,1e-7,10] --shrink-factors 12x8x4x2x1 --smoothing-sigmas 4x3x2x1x0vox -v 1"""
+        print("Job string: ", job_string)
+        call([job_string],shell=True)
+    else:
+        print(f"Warp coords existed, skipping. output name: {output_nrrd}")
+
+
+    ## Create csv of ROIs to be warped (in real space)
+    output_csv = os.path.join(args.output_directory, f'ROIs_worldCoords_{fish_num}.csv')
     if not os.path.isfile(output_csv):
         write_csv(args.fish_abs_path, output_csv)
-
-    ## Warp fish to template space
-
-
-    ## Warp fish to zBrains space
+    else:
+        print(f"ROIs csv existed, skipping. output name: {output_nrrd}")
 
 
+    ## Warp ROIs to template space
+    warp_image=affine_matrix.replace('0GenericAffine.mat','1InverseWarp.nii.gz')
+    warped_rois_output_name = os.path.join(args.output_directory, f'ROIs_templatespace_{fish_num}.csv')
+    job_string = """antsApplyTransformsToPoints -d 3 -i %s -o %s -t [%s, 1] -t %s""" % (output_csv, warped_rois_output_name, affine_matrix, warp_image)
+    print('Warp to template string: ', job_string)
+    if not os.path.isfile(warped_rois_output_name):
+        call([job_string],shell=True)
+    else:
+        print(f'ROIs warped to template space exist, skipping.')
 
-def create_fish_warp():
-    #test3='D:\Scn_synchotron\Test_3D_stacks'#'D:/Maya/Suite2p_output'
-    temp=file_locations(test3)
-    fishstack=make_3D_stack(temp)
+
+    ## Warp ROIs to zbrains space
+    affine_matrix = '/QRISdata/Q2396/ForANTs/Mask_nosedown/MW_To_Zbrain0GenericAffine.mat'
+    warp_image = affine_matrix.replace('0GenericAffine.mat','1InverseWarp.nii.gz')
+    input_coords = warped_rois_output_name
+    output_name = os.path.join(args.output_directory, f'ROIs_zbrainspace_{fish_num}.csv')
+    job_string = """antsApplyTransformsToPoints -d 3 -i %s -o %s -t [%s, 1] -t %s""" % (input_coords, output_name, affine_matrix, warp_image)
+    print('Warp to zbrains string: ', job_string)
+    if not os.path.isfile(output_name):
+        call([job_string],shell=True)  
+    else:
+        print(f'ROIs warped to zbrains space exist, skipping.')
 
 
 def get_range(foldername):
@@ -98,37 +131,7 @@ def file_locations(basefolder):
     fish_folders=zip(fish_folders, slice_orders)    
     return list(fish_folders) #Returns a list of fish with a sub-list for each containing all the folders in which to find the mean tiffs
 
-def make_3D_stack(fish_folders):
-    regex=re.compile(".+_(\d+)_.+fish(\d+).+")
-    for folders in fish_folders:
-        counter=0
-        for i,slicefolder in enumerate(folders[0]):
-            slice_number=folders[1][i]
-            if os.path.isfile(slicefolder+'/ops.npy'):
-                ops=np.load(slicefolder + '/ops.npy',allow_pickle=True).item()
-                meanImg=ops['meanImg']
-                #print(meanImg.shape)
-                if counter==0: #Make empty stack to fill in
-                    fish_stack=np.zeros((len(folders[0]),meanImg.shape[0],meanImg.shape[1]), dtype='uint16')
-                    counter=1
-                    #print(slicefolder)
-                    fishid=''.join(regex.match(slicefolder).groups()) 
-                    #print(fish_stack.shape)
-                fish_stack[slice_number]=meanImg #Insert mean image from that slice to its rightful location 
-                
-            else:
-                warnings.warn('No ops file found in '+slicefolder)
-        # Now save it as an .nrrd file with the metadata embedded
-        basefolder=Path(slicefolder).parents[1]
-        filename=str(basefolder)+os.path.sep+fishid+'.nrrd'
-        print(filename)
-        z_step=get_z_step(slicefolder)
-        header= {'kinds': ['domain', 'domain', 'domain'], 'units': ['micron'], 'spacings': [1.28, 1.28, z_step]} # Use hard-coded x and y pixel sizes (binning of 4)
-        nrrd.write(filename,np.transpose(fish_stack,(2,1,0)),header)   
-                
-    return fish_stack
-
-def make_single_stack(fish_abs_path, output_nrrd):
+def make_meanImg_stack(fish_abs_path, output_nrrd):
     """ Given the folder of fish s2p output make a single 3D stack of the
         meanImage from each plane.
     """
@@ -155,19 +158,24 @@ def make_single_stack(fish_abs_path, output_nrrd):
 
     # Now save it as an .nrrd file with the metadata embedded
     z_step=get_z_step(fish_abs_path)
-    header= {'kinds': ['domain', 'domain', 'domain'], 'units': ['micron'], 'spacings': [1.28, 1.28, z_step]} # Use hard-coded x and y pixel sizes (binning of 4)
+    pix_dim = 1.28
+    header= {'encoding': 'raw', 'endian':'big','space dimension':3,'space directions': ([[  pix_dim,   0. ,   0. ],[  0. ,   pix_dim,   0. ],[  0. ,   0. ,  z_step]]),'space units': ['microns', 'microns', 'microns']}
+
+    #header= {'kinds': ['domain', 'domain', 'domain'], 'units': ['micron'], 'spacings': [1.28, 1.28, z_step]} # Use hard-coded x and y pixel sizes (binning of 4)
     nrrd.write(output_nrrd, np.transpose(fish_stack,(2,1,0)), header) 
 
-def write_csv(fish_abs_path, output_file):
+def write_csv(fish_abs_path, output_file, pix_dims=[1.28, 1.28, 5]):
     """ Create a csv file will all ROIs for the fish
     """
     planes = glob.glob(os.path.join(fish_abs_path, '*'))
-    #print('all planes:', planes)
+    # Sort folders based on digits after plane
+    planes.sort(key=lambda x : int(x[-7:].split('plane')[1]))
 
     all_cells = np.zeros((0, 3))  # will be y, x, plane co-ordinates 
     for i, plane in enumerate(planes):
         
         if not os.path.exists(os.path.join(plane, 'iscell.npy')):
+            print(os.path.join(plane, 'iscell.npy'))
             raise Exception(f'Plane {i} doesn\'t have iscell.npy, cannot continue')
         
         # load fish
@@ -182,7 +190,7 @@ def write_csv(fish_abs_path, output_file):
                 # TODO : what is med? are we sure this is x and y? this needs revising
                 x = stat[n]['med'][1]  # For some reason 'med' is in (y,x)
                 y = stat[n]['med'][0]
-                cell_coords = np.array([x, y, i])
+                cell_coords = np.array([x, y, i]) * np.array(pix_dims)
                 plane_cells.append(cell_coords)
         all_cells = np.concatenate((all_cells, np.array(plane_cells)))
 
@@ -190,7 +198,7 @@ def write_csv(fish_abs_path, output_file):
     extra = np.zeros((all_cells.shape[0], 3))  # ANTs wants time, label, and comment, zero for all
     ants_all_cells = np.concatenate((all_cells, extra), axis=1)
     # TO csv, slow but i dont want to have to import pandas and other methods were a pain
-    csv_rows = [ ','.join([str(num) for num in x]) for x in ants_all_cells]
+    csv_rows = [ ','.join([f'{num:.2f}' for num in x]) for x in ants_all_cells]
     csv_text = "\n".join(csv_rows)
 
     with open(output_file, 'w') as f:
