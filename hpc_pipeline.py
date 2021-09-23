@@ -19,7 +19,8 @@ WAITTIME = 3 * 60 * 60
 HPCHOSTNAME='awoonga.qriscloud.org.au'
 # HPC user account to use, set as environment variable
 USERNAME=os.getenv('UQUSERNAME')
-
+# Version
+HPCPIPELINEVERSION=0.8
 
 
 def main():
@@ -38,6 +39,7 @@ def main():
     logging.basicConfig(filename=f'logs/{args.name}.log', level=logging.INFO)
     logging.info('-' * 60)
     logging.info(f'{datetime.datetime.now()}                   Launch pipeline')
+    logging.info(f'Pipeline version: {HPCPIPELINEVERSION}')
     logging.info('-' * 60)
 
     ## Set up SSH connection
@@ -137,7 +139,7 @@ def transfer_s2p_args(ssh, exp_name, s2p_config_json):
     logging.info(f"Sent {exp_s2p_filename} to server.")
     return exp_s2p_filename
 
-def create_whole_fish_s2p_jobs(ssh, input_folder, output_folder, s2p_config_json, job_class):
+def create_whole_fish_s2p_jobs(ssh, input_folder, output_folder, s2p_config_json, job_class, testing_pipeline=False):
     """ Create suite2p whole fish jobs for the cluster given the ssh connection
         and the command line arguments
 
@@ -157,8 +159,10 @@ def create_whole_fish_s2p_jobs(ssh, input_folder, output_folder, s2p_config_json
     all_fish = [filename.strip() for filename in all_fish]
     input_folder = os.path.normpath(input_folder)
 
-    # TODO : hack to only process some of q2396 fish (just grab some)
-    # all_fish = all_fish[4:6]
+    # Only grab 2 fish
+    if testing_pipeline and len(all_fish) > 2:
+        logging.info('>>> Got testing pipeline flag, only using first two fish')
+        all_fish = all_fish[:2]
 
     fish_jobs = []
     for fish_base_name in all_fish:
