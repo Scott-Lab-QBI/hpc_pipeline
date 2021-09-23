@@ -15,66 +15,70 @@ from subprocess import call
 def main():
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('fish_abs_path', help="Absolute path to the directory of s2p output")
-    parser.add_argument('output_directory', help="Absolute path to an output folder")
+    parser.add_argument('s2p_output_path', help="Absolute path to the directory of s2p output")
+    parser.add_argument('output_directory', help="Absolute path to an output folder, will create an ANTs folder inside")
     args = parser.parse_args()
 
-    fish_num = os.path.basename(args.fish_abs_path).split('fish')[1].split('_')[0]
+    fish_num = os.path.basename(args.s2p_output_path).split('fish')[1].split('_')[0]
+
+    ## Make ANTs folder inside output directory
+    fish_folder_name = args.s2p_output_path.split('suite2p_')[1]
+    ants_output_path = os.path.join(args.output_directory, f'ants_{fish_folder_name}')
+
 
     ## Create fish's individual meanImg of suite2p activity (as nrrd)
-    output_nrrd = os.path.join(args.output_directory, f'mean_stack_{fish_num}.nrrd')
-    if not os.path.isfile(output_nrrd):
-        print('make suite2p mean image stack', output_nrrd)
-        make_meanImg_stack(args.fish_abs_path, output_nrrd)
+    meanImg_stack_nrrd_path = os.path.join(ants_output_path, f'mean_stack_{fish_num}.nrrd')
+    if not os.path.isfile(meanImg_stack_nrrd_path):
+        print('make suite2p mean image stack', meanImg_stack_nrrd_path)
+        make_meanImg_stack(args.s2p_output_path, meanImg_stack_nrrd_path)
     else:
-        print(f"Fish meanImg stack existed, skipping. output name: {output_nrrd}")
+        print(f">>>> Fish meanImg stack existed, skipping. Filename: {meanImg_stack_nrrd_path}")
 
 
     ## Warp fish meanImg to template space to get warp matrices
     # Following process in 'register_brains_to_template.ipynb'
     fixed_image = '/QRISdata/Q2396/ForANTs/MW_Synchotrontemplate.nrrd' # the template
-    moved_image = output_nrrd  # The fish 
-    output_name = os.path.join(args.output_directory, f'antReg_{fish_num}')
-    affine_matrix = f'{output_name}0GenericAffine.mat'
-
-    if not os.path.isfile(affine_matrix):
-        job_string = """antsRegistration -d 3 --float 1 -o ["""+output_name+""", """+output_name+""".nii] -n WelchWindowedSinc --winsorize-image-intensities [0.01,0.99] --use-histogram-matching 1 -r ["""+fixed_image+""","""+moved_image+""", 1] -t rigid[0.1] -m MI["""+fixed_image+""","""+moved_image+""",1,32, Regular,0.5] -c [1000x500x500x500,1e-8,10] --shrink-factors 8x4x2x1 --smoothing-sigmas 2x1x1x0vox -t Affine[0.1] -m MI["""+fixed_image+""","""+moved_image+""",1,32, Regular,0.5] -c [1000x500x500x500,1e-8,10] --shrink-factors 8x4x2x1 --smoothing-sigmas 2x1x1x0vox -t SyN[0.05,6,0.5] -m CC["""+fixed_image+""","""+moved_image+""",1,2] -c [1000x500x500x500x500,1e-7,10] --shrink-factors 12x8x4x2x1 --smoothing-sigmas 4x3x2x1x0vox -v 1"""
-        print("Job string: ", job_string)
+    moved_image = meanImg_stack_nrrd_path
+    registration_output_name = os.path.join(ants_output_path, f'antReg_{fish_num}')
+    to_template_affine_matrix = f'{registration_output_name}0GenericAffine.mat'
+    job_string = f"antsRegistration -d 3 --float 1 -o [{registration_output_name}, {registration_output_name}.nii] -n WelchWindowedSinc --winsorize-image-intensities [0.01,0.99] --use-histogram-matching 1 -r [{fixed_image}, {moved_image}, 1] -t rigid[0.1] -m MI[{fixed_image}, {moved_image},1,32, Regular,0.5] -c [1000x500x500x500,1e-8,10] --shrink-factors 8x4x2x1 --smoothing-sigmas 2x1x1x0vox -t Affine[0.1] -m MI[{fixed_image}, {moved_image},1,32, Regular,0.5] -c [1000x500x500x500,1e-8,10] --shrink-factors 8x4x2x1 --smoothing-sigmas 2x1x1x0vox -t SyN[0.05,6,0.5] -m CC[{fixed_image}, {moved_image},1,2] -c [1000x500x500x500x500,1e-7,10] --shrink-factors 12x8x4x2x1 --smoothing-sigmas 4x3x2x1x0vox -v 1"
+    print("Warp fish job string: ", job_string)
+    if not os.path.isfile(to_template_affine_matrix):
         call([job_string],shell=True)
     else:
-        print(f"Warp coords existed, skipping. output name: {output_nrrd}")
+        print(f">>>> Fish already registered, skipping. output name: {to_template_affine_matrix}")
 
 
     ## Create csv of ROIs to be warped (in real space)
-    output_csv = os.path.join(args.output_directory, f'ROIs_worldCoords_{fish_num}.csv')
+    output_csv = os.path.join(ants_output_path, f'ROIs_worldCoords_{fish_num}.csv')
     if not os.path.isfile(output_csv):
-        write_csv(args.fish_abs_path, output_csv)
+        write_csv(args.s2p_output_path, output_csv)
     else:
-        print(f"ROIs csv existed, skipping. output name: {output_nrrd}")
+        print(f">>>> ROIs csv existed, skipping. output name: {output_csv}")
 
 
     ## Warp ROIs to template space
-    warp_image=affine_matrix.replace('0GenericAffine.mat','1InverseWarp.nii.gz')
-    warped_rois_output_name = os.path.join(args.output_directory, f'ROIs_templatespace_{fish_num}.csv')
-    job_string = """antsApplyTransformsToPoints -d 3 -i %s -o %s -t [%s, 1] -t %s""" % (output_csv, warped_rois_output_name, affine_matrix, warp_image)
+    templatespace_warp_image = to_template_affine_matrix.replace('0GenericAffine.mat','1InverseWarp.nii.gz')
+    templatespace_rois_output_name = os.path.join(ants_output_path, f'ROIs_templatespace_{fish_num}.csv')
+    template_warp_job_string = f"antsApplyTransformsToPoints -d 3 -i {output_csv} -o {templatespace_rois_output_name} -t [{to_template_affine_matrix}, 1] -t {templatespace_warp_image}"
     print('Warp to template string: ', job_string)
-    if not os.path.isfile(warped_rois_output_name):
-        call([job_string],shell=True)
+    if not os.path.isfile(templatespace_rois_output_name):
+        call([template_warp_job_string],shell=True)
     else:
-        print(f'ROIs warped to template space exist, skipping.')
+        print(f'>>>> ROIs warped to template space exist, skipping.')
 
 
     ## Warp ROIs to zbrains space
-    affine_matrix = '/QRISdata/Q2396/ForANTs/Mask_nosedown/MW_To_Zbrain0GenericAffine.mat'
-    warp_image = affine_matrix.replace('0GenericAffine.mat','1InverseWarp.nii.gz')
-    input_coords = warped_rois_output_name
-    output_name = os.path.join(args.output_directory, f'ROIs_zbrainspace_{fish_num}.csv')
-    job_string = """antsApplyTransformsToPoints -d 3 -i %s -o %s -t [%s, 1] -t %s""" % (input_coords, output_name, affine_matrix, warp_image)
+    to_zbrains_affine_matrix = '/QRISdata/Q2396/ForANTs/Mask_nosedown/MW_To_Zbrain0GenericAffine.mat'
+    warp_image = to_zbrains_affine_matrix.replace('0GenericAffine.mat','1InverseWarp.nii.gz')
+    input_coords = templatespace_rois_output_name
+    zbrainspace_rois_output_name = os.path.join(ants_output_path, f'ROIs_zbrainspace_{fish_num}.csv')
+    job_string = f"antsApplyTransformsToPoints -d 3 -i {input_coords} -o {zbrainspace_rois_output_name} -t [{to_zbrains_affine_matrix}, 1] -t {warp_image}"
     print('Warp to zbrains string: ', job_string)
-    if not os.path.isfile(output_name):
+    if not os.path.isfile(zbrainspace_rois_output_name):
         call([job_string],shell=True)  
     else:
-        print(f'ROIs warped to zbrains space exist, skipping.')
+        print(f'>>>> ROIs warped to zbrains space exist, skipping.')
 
 
 def get_range(foldername):
@@ -131,11 +135,11 @@ def file_locations(basefolder):
     fish_folders=zip(fish_folders, slice_orders)    
     return list(fish_folders) #Returns a list of fish with a sub-list for each containing all the folders in which to find the mean tiffs
 
-def make_meanImg_stack(fish_abs_path, output_nrrd):
+def make_meanImg_stack(s2p_output_path, output_nrrd):
     """ Given the folder of fish s2p output make a single 3D stack of the
         meanImage from each plane.
     """
-    all_folders = glob.glob(os.path.join(fish_abs_path, '*'))
+    all_folders = glob.glob(os.path.join(s2p_output_path, '*'))
     # Remove combined folder 
     for folder in all_folders:
         if 'combined' in folder:
@@ -157,17 +161,17 @@ def make_meanImg_stack(fish_abs_path, output_nrrd):
         fish_stack[plane_idx]=meanImg
 
     # Now save it as an .nrrd file with the metadata embedded
-    z_step=get_z_step(fish_abs_path)
+    z_step=get_z_step(s2p_output_path)
     pix_dim = 1.28
     header= {'encoding': 'raw', 'endian':'big','space dimension':3,'space directions': ([[  pix_dim,   0. ,   0. ],[  0. ,   pix_dim,   0. ],[  0. ,   0. ,  z_step]]),'space units': ['microns', 'microns', 'microns']}
 
     #header= {'kinds': ['domain', 'domain', 'domain'], 'units': ['micron'], 'spacings': [1.28, 1.28, z_step]} # Use hard-coded x and y pixel sizes (binning of 4)
     nrrd.write(output_nrrd, np.transpose(fish_stack,(2,1,0)), header) 
 
-def write_csv(fish_abs_path, output_file, pix_dims=[1.28, 1.28, 5]):
+def write_csv(s2p_output_path, output_file, pix_dims=[1.28, 1.28, 5]):
     """ Create a csv file will all ROIs for the fish
     """
-    planes = glob.glob(os.path.join(fish_abs_path, '*'))
+    planes = glob.glob(os.path.join(s2p_output_path, '*'))
     # Sort folders based on digits after plane
     planes.sort(key=lambda x : int(x[-7:].split('plane')[1]))
 

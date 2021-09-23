@@ -52,7 +52,7 @@ if [ {num_planes} -eq 1 ]; then
 fi
 
 module load anaconda
-source activate suite2p
+conda activate suite2p
 
 for fish_tif in `ls {fish_folder}/*.tif`; do
     /usr/local/bin/recall_medici $fish_tif
