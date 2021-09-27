@@ -66,12 +66,12 @@ def main():
 
     print(f"pre if: {array_num}, {len(planes_left)}, {ops.get('nplanes')}")
     data_bin_location = os.path.join(db['fast_disk'], f'suite2p/plane{plane_num}/data.bin')
-    if array_num == 1 and not os.path.isfile(data_bin_location): 
+    ops_location = os.path.join(fish_output_path, f'plane{plane_num}/ops.npy')
+    if array_num == 1 and (not os.path.isfile(data_bin_location) or not os.path.isfile(ops_location)): 
         print("OPS:", ops)
         ## Run suite2p
         opsEnd=suite2p.run_s2p(ops=ops,db=db)
     else:
-        ops_location = os.path.join(fish_output_path, f'plane{plane_num}/ops.npy')
         print(f'Will look for data.bin and ops file: {data_bin_location}, {ops_location}')
         count = 10
         while count > 0:
