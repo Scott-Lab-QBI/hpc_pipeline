@@ -17,21 +17,25 @@ import datetime
 WAITTIME = 3 * 60 * 60
 # HPC ssh address to use
 HPCHOSTNAME='awoonga.qriscloud.org.au'
+#HPCHOSTNAME='flashlite.rcc.uq.edu.au'
 # HPC user account to use, set as environment variable
 USERNAME=os.getenv('UQUSERNAME')
 # Version
-HPCPIPELINEVERSION=0.8
+HPCPIPELINEVERSION=1.0
+# Folder where any data ish files should go (e.g. planes_left)
+DATADIR=os.path.join(os.path.expanduser('~'), 'hpc_pipeline/data')
 
 
 def main():
 
     ## Process input arguments
     parser = argparse.ArgumentParser(description="Launch and monitor computational jobs on a remote server.")
-    parser.add_argument('-j', '--job-type', help='The type of HPC job to run', type=str, choices=['fish-whole', 'fish-slices', 'slice-whole', 'fish-parallel', 'ants-zbrain'], default='fish-whole')
+    parser.add_argument('-j', '--job-type', help='The type of HPC job to run', type=str, choices=['fish-whole', 'fish-slices', 'slice-whole', 'fish-parallel', 'ants-zbrain', 'full-pipeline'], default='full-pipeline')
     parser.add_argument('-s', '--s2p-config-json', help='Suite2p json config file', type=str)
     parser.add_argument('-i', '--input-folder', help='Folder containing input data', type=str)
     parser.add_argument('-o', '--output-folder', help='Folder where output should be saved', type=str)
     parser.add_argument('-a', '--array-id', help='Job ID of a currently running array to watch - for slice arrays only', type=str)
+    parser.add_argument('-t', '--testing', help='If testing the pipeline, will only run the 5th and 6th fish in a folder', action='store_true')
     parser.add_argument('name', help='A unique name identifying this set of jobs.', type=str)
     args = parser.parse_args()
 
@@ -70,18 +74,32 @@ def main():
         exp_s2p_filename = transfer_s2p_args(ssh, args.name, args.s2p_config_json)
 
         ## Create all jobs
-        incomplete_jobs = create_whole_fish_s2p_jobs(ssh, args.input_folder, args.output_folder, exp_s2p_filename, ParallelFishs2p)
+        incomplete_jobs = create_whole_fish_s2p_jobs(ssh, args.input_folder, args.output_folder, exp_s2p_filename, ParallelFishs2p, args.testing)
     
     elif args.job_type == 'slice-whole':
         print('Doing slice-whole (will reslice fish then process)')
-        raise NotImplementedError()
+        raise DeprecationWarning()
 
     elif args.job_type == 'ants-zbrain':
-        pass
+        pass  # TODO : ignore general case for now, unlikely.
+        raise NotImplementedError()
+
+    elif args.job_type == 'full-pipeline':
+        # effectively, just create fish-parallel jobs and then tag on ants as next job
+        # Send s2p args to server and get the filename used
+        exp_s2p_filename = transfer_s2p_args(ssh, args.name, args.s2p_config_json)
+
+        ## Create all jobs
+        incomplete_jobs = create_whole_fish_s2p_jobs(ssh, args.input_folder, args.output_folder, exp_s2p_filename, ParallelFishs2p, args.testing)
+
+        ## for each ParallelFishs2p job add an ants job as the follow on job
+        for job in incomplete_jobs:
+            ants_job = Warp2Zbrains(ssh, job.fish_output_folder, args.output_folder)
+            job.next_job = ants_job
 
     else:
         print('Job type not recognised.')
-        raise Exception()
+        raise Exception('Job type not recognised.')
 
     ## Main loop
     while incomplete_jobs:
@@ -116,12 +134,12 @@ def main():
             # If there is a job to do after this one, lets schedule it
             next_job = job.get_next_job()
             if next_job:
-                next_job.start()
+                assert not next_job.is_finished(), "Next job was finished before having started, implies it used old data, not sure what to do, crashing."
+                next_job.start_job()
                 incomplete_jobs.append(next_job)
 
             incomplete_jobs.remove(job)
             
-        #[incomplete_jobs.remove(job) for job in finished_jobs]
         finished_jobs = []
 
         ## Wait some time before checking again
@@ -130,7 +148,7 @@ def main():
 
 def transfer_s2p_args(ssh, exp_name, s2p_config_json):
     ## Create an experiment specific copy of s2p_ops 
-    exp_s2p_filename = f'{exp_name}_{os.path.basename(s2p_config_json)}'
+    exp_s2p_filename = os.path.join(DATADIR, f'{exp_name}_{os.path.basename(s2p_config_json)}')
     shutil.copy2(s2p_config_json, exp_s2p_filename)
 
     ## move to server
@@ -138,6 +156,11 @@ def transfer_s2p_args(ssh, exp_name, s2p_config_json):
     ftp_client.put(exp_s2p_filename, exp_s2p_filename)
     logging.info(f"Sent {exp_s2p_filename} to server.")
     return exp_s2p_filename
+
+def create_ants_warp_jobs(ssh, s2p_output_folders, output_folder):
+    """ Create a list of ants warping jobs for all s2p output 
+    """
+    raise NotImplementedError
 
 def create_whole_fish_s2p_jobs(ssh, input_folder, output_folder, s2p_config_json, job_class, testing_pipeline=False):
     """ Create suite2p whole fish jobs for the cluster given the ssh connection
@@ -161,8 +184,8 @@ def create_whole_fish_s2p_jobs(ssh, input_folder, output_folder, s2p_config_json
 
     # Only grab 2 fish
     if testing_pipeline and len(all_fish) > 2:
-        logging.info('>>> Got testing pipeline flag, only using first two fish')
-        all_fish = all_fish[:2]
+        logging.info('>>> Got testing pipeline flag, only doing fish 05, 06')
+        all_fish = all_fish[4:6]
 
     fish_jobs = []
     for fish_base_name in all_fish:
@@ -247,6 +270,8 @@ def parse_job_id(line):
     """
     if '.awon' in line:
         return line.split('.awon')[0].strip('[]')
+    if '.flash' in line:
+        return line.split('.flash')[0].strip('[]')
     return None
 
 
@@ -340,7 +365,7 @@ class Warp2Zbrains(HPCJob):
             - warp points again to zbrain
     """
 
-    def __init__(self, ssh, fish_abs_path, base_output_folder):
+    def __init__(self, ssh, s2p_output_path, base_output_folder):
         """ 
         Args:
             ssh: An open ssh connection
@@ -350,23 +375,37 @@ class Warp2Zbrains(HPCJob):
               saved.
         """
         super().__init__(ssh)
-        self.fish_abs_path = fish_abs_path
+        self.s2p_output_path = s2p_output_path
         self.base_output_folder = base_output_folder
+        fish_folder_name = s2p_output_path.split('suite2p_')[1]
+        self.ants_output_path = os.path.join(base_output_folder, f'ants_{fish_folder_name}')
 
     def start_job(self):
+        ## Launch and check array
+        launch_job = f'python ~/hpc_pipeline/submit_warp_fish_job.py {self.s2p_output_path} {self.ants_output_path}'
 
-        pass
-    
+        self.do_qsub_check_errors(launch_job)
+
+        self.log_status()
 
 
-
+    def log_status(self):
+        fish_num = os.path.basename(self.fish_abs_path).split('fish')[1].split('_')[0]
+        logging.info(f"FISH_STATUS: fish_{fish_num}, Running ANTs, Latest HPC id: {self.get_latest_job_id()}")
 
 
     def is_finished(self):
         """ Will check if final zbrains files exist
         """
-        pass
+        fish_num = os.path.basename(self.fish_abs_path).split('fish')[1].split('_')[0]
+        zbrain_roi_filepath = os.path.join(self.ants_output_path, f'ROIs_zbrainspace_{fish_num}.csv')
+        find_command = f'ls {zbrain_roi_filepath}'
+        logging.info(f'ssh exec: {find_command}')
+        stdin, stdout, stderr = self.ssh.exec_command(find_command)
+        find_result = stdout.readlines()
 
+        # A lack of error message means we are finished
+        return not "No such file or directory" in find_result
 
 
 class FullFishs2p(HPCJob):
@@ -470,7 +509,7 @@ class ParallelFishs2p(FullFishs2p):
         # TODO : pass exp_name explicitly shouldn't be splitting from filename like this
         exp_name = self.s2p_config_json.split('_ops_1P_whole.json')[0]
         fish_num = os.path.basename(self.fish_abs_path).split('fish')[1].split('_')[0]
-        planes_left_json = f'{exp_name}_fish{fish_num}_planes_left.json'
+        planes_left_json = os.path.join(DATADIR, f'{exp_name}_fish{fish_num}_planes_left.json')
         with open(planes_left_json, 'w') as fp:
             fp.write(contents)
 
@@ -493,7 +532,7 @@ class ParallelFishs2p(FullFishs2p):
         planes_left = self.s2p_ops.get('nplanes') - len(self.planes_left)
         total_planes = self.s2p_ops.get('nplanes')
         percent_done = planes_left / self.s2p_ops.get('nplanes')
-        logging.info(f"FISH_STATUS: fish_{fish_num}, {planes_left}/{total_planes} planes, {int(percent_done * 100)}% done, Latest Awoonga id: {self.get_latest_job_id()}[]")
+        logging.info(f"FISH_STATUS: fish_{fish_num}, {planes_left}/{total_planes} planes, {int(percent_done * 100)}% done, Latest HPC id: {self.get_latest_job_id()}[]")
 
 class SlicedFishs2p(HPCJob):
     """ Run a sliced fish through suite2p using arguments from specified config
@@ -569,7 +608,7 @@ class SlicedFishs2p(HPCJob):
     def start_job(self):
         ## Create a list of slices to do
         contents = '\n'.join(self.incomplete_slices)
-        incomplete_slices_filename = f'incomplete_slices_{self.exp_name}.txt'
+        incomplete_slices_filename = os.path.join(DATADIR, f'incomplete_slices_{self.exp_name}.txt')
         with open(incomplete_slices_filename, 'w') as f:
             f.write(contents)
 
