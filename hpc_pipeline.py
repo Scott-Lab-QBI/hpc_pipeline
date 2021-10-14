@@ -152,11 +152,13 @@ def main():
 def transfer_s2p_args(ssh, exp_name, s2p_config_json):
     ## Create an experiment specific copy of s2p_ops 
     exp_s2p_filename = os.path.join(DATADIR, f'{exp_name}_{os.path.basename(s2p_config_json)}')
+    hpc_exp_s2p_filename = os.path.join(HPCDATADIR, f'{exp_name}_{os.path.basename(s2p_config_json)}')
     shutil.copy2(s2p_config_json, exp_s2p_filename)
 
     ## move to server
     ftp_client = ssh.open_sftp()
-    ftp_client.put(exp_s2p_filename, HPCDATADIR)
+    print(exp_s2p_filename, hpc_exp_s2p_filename)
+    ftp_client.put(exp_s2p_filename, hpc_exp_s2p_filename)
     logging.info(f"Sent {exp_s2p_filename} to server.")
     return exp_s2p_filename
 
@@ -514,15 +516,17 @@ class ParallelFishs2p(FullFishs2p):
         exp_name = self.s2p_config_json.split('_ops_1P_whole.json')[0].split('/')[-1]
         fish_num = os.path.basename(self.fish_abs_path).split('fish')[1].split('_')[0]
         planes_left_json = os.path.join(DATADIR, f'{exp_name}_fish{fish_num}_planes_left.json')
+        hpc_planes_left_json = os.path.join(HPCDATADIR, f'{exp_name}_fish{fish_num}_planes_left.json')
+        hpc_s2p_config_json = os.path.join(HPCDATADIR, os.path.basename(self.s2p_config_json))
         with open(planes_left_json, 'w') as fp:
             fp.write(contents)
 
         ## Send over to cluster
         ftp_client = self.ssh.open_sftp()
-        ftp_client.put(planes_left_json, HPCDATADIR)
+        ftp_client.put(planes_left_json, hpc_planes_left_json)
         
         ## Launch and check array
-        launch_job = f'python ~/hpc_pipeline/submit_fish_sliced_job.py {self.fish_abs_path} {self.fish_output_folder} {self.s2p_config_json} {planes_left_json}'
+        launch_job = f'python ~/hpc_pipeline/submit_fish_sliced_job.py {self.fish_abs_path} {self.fish_output_folder} {hpc_s2p_config_json} {hpc_planes_left_json}'
 
         #logging.info(f'Would do qsub here but just testing.\n {launch_job}')
         self.do_qsub_check_errors(launch_job)
