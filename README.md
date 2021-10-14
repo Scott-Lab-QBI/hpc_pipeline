@@ -30,7 +30,7 @@ Initially connect VS code to Awoonga:
 - Select Continue
 - Enter your password
 - Wait a few minutes for VS code to install on Awoonga, you may be prompted for your password again
-- Once installation is done, press `ctrl` + `shift` + `\`` to open a terminal on Awoonga
+- Once installation is done, press `ctrl` + `shift` + `` ` `` to open a terminal on Awoonga
 
 You will only need to complete the above step once, in the future to log into Awoonga or Moss you will only need to follow the steps in 'logging in' in the section on launching a job below.
 
@@ -64,7 +64,6 @@ git clone https://github.com/Scott-Lab-QBI/suite2p.git
 Now lets go into the Suite2p folder and set up the an Anaconda environment, copy the following commands, agree to the installation instructions and default locations
 ```
 cd suite2p
-module load anaconda
 conda env create -f environment.yml
 ```
 To Activate and use the suite2p environment you can use the command
@@ -88,13 +87,25 @@ Repeat the steps listed under the heading "Initially connect VS code to Awoonga"
 Now, run the following commands in the terminal to install a copy of the hpc_pipeline on Moss.
 ```
 cd ~/
-git clone git@github.com:Scott-Lab-QBI/hpc_pipeline.git
+git clone https://github.com/Scott-Lab-QBI/hpc_pipeline.git
 ```
 
 Now we need to make sure the hpc_pipeline knows which user account to use when it tries to connect to awoonga, in the following command replace "your-user-name" with your UQ user name
 ```
 echo "export UQUSERNAME=your-user-name" >> ~/.bashrc
 alias pstat='python3 ~/hpc_pipeline/monitor_pipeline.py'
+source ~/.bashrc
+```
+
+### Install anaconda on Moss
+Before we can install Suite2p we will need to install anaconda, agree to the licence (press and hold enter to scroll to bottom of the licence and type yes), use default install locations (just press enter when asked about install locations) and then type yes to initialise miniconda.
+```
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+```
+Now we can remove anaconda's install file and refresh the terminal 
+```
+rm Miniconda3-latest-Linux-x86_64.sh
 source ~/.bashrc
 ```
 
@@ -110,6 +121,9 @@ pip install paramiko
 To allow the command server (Moss) to access Awoonga without you there to enter your password we need to set up a pair of keys ([more info on keys](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-2)). First we will need to generate some keys for your account on Moss, use the default install location with no pass phrase after entering these commands in the terminal on Moss. 
 ```
 ssh-keygen -t ed25519
+```
+And now copy the new key onto Awoonga
+```
 ssh-copy-id ${UQUSERNAME}@awoonga.qriscloud.org.au
 ```
 
