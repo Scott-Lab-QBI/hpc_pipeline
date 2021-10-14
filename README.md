@@ -151,6 +151,24 @@ To check if the hpc_pipeline is running in a terminal on Mango type the command
 ```
 pstat
 ```
+which will produce output like the below:
+```
+------------------------------------------------------------
+(0) v1-tests, jobid: 224523
+    fish_06, 0/50 planes, 0% done, Latest HPC id: 210917[]
+    fish_07, 0/50 planes, 0% done, Latest HPC id: 210918[]
+------------------------------------------------------------
+(1) pipe2ants, jobid: 151458
+    fish_05, Running ANTs, Latest HPC id: 210914
+    fish_06, Running ANTs, Latest HPC id: 210915
+------------------------------------------------------------
+```
+In this case there are two jobs running with job names v1-tests and pipe2ants, each with two fish. The initial number in backets is the the jobs pipeline number, to stop a job you can type the command `pstat` then the pipeline job number, e.g. to stop the v1-tests which has a pipeline job number of 0 you could type
+```
+pstat 0
+```
+You will be asked if you also want to stop the associated jobs on the HPC cluser (Awoonga). This doesn't always work perfectly, so if you want to make sure the HPC jobs have stopped you will need to log into Awoonga and do that manually. 
+
 To check the logs (which tell us what the program is doing / did) we need to know the jobname specified for the job. We can then view the logs using
 ```
 cd ~/hpc_pipeline
@@ -158,6 +176,7 @@ cat logs/descriptive-name.log
 ``` 
 which will just paste the whole log to the terminal, alternatively you could just open the file in VS code to view it. Similarly, for each job launched a `descriptive-name.txt` file is also created which has a record the information used to launch the job (the input folder, fps, nplanes, etc.). 
 
+To stop a job from running 
 
 
 ## Additional information about the hpc_pipeline
