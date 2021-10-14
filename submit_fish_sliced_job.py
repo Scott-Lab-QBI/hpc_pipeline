@@ -19,7 +19,7 @@ args = parser.parse_args()
 fish_folder = os.path.normpath(args.fish_abs_path)
 fish_output_folder = os.path.normpath(args.output_directory)
 fish_num = os.path.basename(fish_folder).split('fish')[1].split('_')[0]
-job_name = args.s2p_config_json.split('_ops_1P_whole.json')[0]
+job_name = args.s2p_config_json.split('_ops_1P_whole.json')[0].split('/')[-1]
 
 with open(args.planes_left_json, 'r') as fp:
     planes_left = json.load(fp)
