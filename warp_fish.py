@@ -16,15 +16,16 @@ def main():
     
     parser = argparse.ArgumentParser()
     parser.add_argument('s2p_output_path', help="Absolute path to the directory of s2p output")
-    parser.add_argument('output_directory', help="Absolute path to an output folder, will create an ANTs folder inside")
+    parser.add_argument('output_directory', help="Absolute path to a folder that ants output will be written to.")
     args = parser.parse_args()
 
     fish_num = os.path.basename(args.s2p_output_path).split('fish')[1].split('_')[0]
 
-    ## Make ANTs folder inside output directory
-    fish_folder_name = args.s2p_output_path.split('suite2p_')[1]
-    ants_output_path = os.path.join(args.output_directory, f'ants_{fish_folder_name}')
-
+    ## if folder doesn't exist, create it
+    ants_output_path = args.output_directory
+    if not os.path.isdir(ants_output_path):
+        print(f'Directory didnt exist, creating: {ants_output_path}')
+        os.mkdir(ants_output_path)
 
     ## Create fish's individual meanImg of suite2p activity (as nrrd)
     meanImg_stack_nrrd_path = os.path.join(ants_output_path, f'mean_stack_{fish_num}.nrrd')
@@ -41,7 +42,13 @@ def main():
     moved_image = meanImg_stack_nrrd_path
     registration_output_name = os.path.join(ants_output_path, f'antReg_{fish_num}')
     to_template_affine_matrix = f'{registration_output_name}0GenericAffine.mat'
-    job_string = f"antsRegistration -d 3 --float 1 -o [{registration_output_name}, {registration_output_name}.nii] -n WelchWindowedSinc --winsorize-image-intensities [0.01,0.99] --use-histogram-matching 1 -r [{fixed_image}, {moved_image}, 1] -t rigid[0.1] -m MI[{fixed_image}, {moved_image},1,32, Regular,0.5] -c [1000x500x500x500,1e-8,10] --shrink-factors 8x4x2x1 --smoothing-sigmas 2x1x1x0vox -t Affine[0.1] -m MI[{fixed_image}, {moved_image},1,32, Regular,0.5] -c [1000x500x500x500,1e-8,10] --shrink-factors 8x4x2x1 --smoothing-sigmas 2x1x1x0vox -t SyN[0.05,6,0.5] -m CC[{fixed_image}, {moved_image},1,2] -c [1000x500x500x500x500,1e-7,10] --shrink-factors 12x8x4x2x1 --smoothing-sigmas 4x3x2x1x0vox -v 1"
+    num_cores = os.getenv('ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS')
+    slow_registration = f"antsRegistration -d 3 --float 1 -o [{registration_output_name}, {registration_output_name}.nii] -n WelchWindowedSinc --winsorize-image-intensities [0.01,0.99] --use-histogram-matching 1 -r [{fixed_image}, {moved_image}, 1] -t rigid[0.1] -m MI[{fixed_image}, {moved_image},1,32, Regular,0.5] -c [1000x500x500x500,1e-8,10] --shrink-factors 8x4x2x1 --smoothing-sigmas 2x1x1x0vox -t Affine[0.1] -m MI[{fixed_image}, {moved_image},1,32, Regular,0.5] -c [1000x500x500x500,1e-8,10] --shrink-factors 8x4x2x1 --smoothing-sigmas 2x1x1x0vox -t SyN[0.05,6,0.5] -m CC[{fixed_image}, {moved_image},1,2] -c [1000x500x500x500x500,1e-7,10] --shrink-factors 12x8x4x2x1 --smoothing-sigmas 4x3x2x1x0vox -v 1"
+    fast_registration = f"antsRegistrationSyNQuick.sh -d 3 -f {fixed_image} -m {moved_image}  -o {registration_output_name} -n {num_cores} -p f -j 1"
+    job_string = slow_registration
+    do_fast_registration = True
+    if do_fast_registration:
+        job_string = fast_registration
     print("Warp fish job string: ", job_string)
     if not os.path.isfile(to_template_affine_matrix):
         call([job_string],shell=True)
@@ -61,7 +68,7 @@ def main():
     templatespace_warp_image = to_template_affine_matrix.replace('0GenericAffine.mat','1InverseWarp.nii.gz')
     templatespace_rois_output_name = os.path.join(ants_output_path, f'ROIs_templatespace_{fish_num}.csv')
     template_warp_job_string = f"antsApplyTransformsToPoints -d 3 -i {output_csv} -o {templatespace_rois_output_name} -t [{to_template_affine_matrix}, 1] -t {templatespace_warp_image}"
-    print('Warp to template string: ', job_string)
+    print('Warp to template string: ', template_warp_job_string)
     if not os.path.isfile(templatespace_rois_output_name):
         call([template_warp_job_string],shell=True)
     else:
@@ -146,7 +153,6 @@ def make_meanImg_stack(s2p_output_path, output_nrrd):
             all_folders.remove(folder)
     # Sort folders based on digits after plane
     all_folders.sort(key=lambda x : int(x[-7:].split('plane')[1]))
-    # TODO : Verify planes are in order else stack will not be aligned
     print(all_folders)
     initalised = False
     for plane_idx, plane_path in enumerate(all_folders):
@@ -156,7 +162,7 @@ def make_meanImg_stack(s2p_output_path, output_nrrd):
         ops = np.load(ops_path, allow_pickle=True).item()
         meanImg = ops.get('meanImg')
         if not initalised:
-            fish_stack = np.zeros((len(all_folders),meanImg.shape[0],meanImg.shape[1]), dtype='uint16')
+            fish_stack = np.zeros((len(all_folders),meanImg.shape[0],meanImg.shape[1]), dtype=np.float32)
             initalised = True
         fish_stack[plane_idx]=meanImg
 
@@ -191,7 +197,6 @@ def write_csv(s2p_output_path, output_file, pix_dims=[1.28, 1.28, 5]):
         plane_cells = []
         for n in range(ncells):
             if iscell[n, 0]:
-                # TODO : what is med? are we sure this is x and y? this needs revising
                 x = stat[n]['med'][1]  # For some reason 'med' is in (y,x)
                 y = stat[n]['med'][0]
                 cell_coords = np.array([x, y, i]) * np.array(pix_dims)
