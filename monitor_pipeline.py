@@ -35,7 +35,7 @@ def main():
         print('Invalid index:', args.job_idx)
         return
 
-    kill_awoonga_jobs = True if input('Kill associated jobs on awoonga too (y/N)? ').lower() == 'y' else False
+    kill_awoonga_jobs = False if input('Kill associated jobs on awoonga too (Y/n)? ').lower() == 'n' else True
 
     data_to_kill = controller_data[int(args.job_idx)]
     # data to kill is a list with two items, the first has form <job name> and <pid>
@@ -93,7 +93,7 @@ def print_status(do_print=True):
 def parse_logs(job_name):
     """ Read a log file for a """
     uq_username = os.getenv('UQUSERNAME')
-    log_name = f'/home/{uq_username}/hpc_pipeline/logs/{job_name}.log'
+    log_name = os.path.join(os.path.expanduser('~'), f'hpc_pipeline/logs/{job_name}.log')
     with open(log_name, 'r') as fp:
         log_text = fp.readlines()
     
