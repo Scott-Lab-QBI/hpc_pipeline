@@ -132,7 +132,7 @@ To edit files on a remote server:
 ### launch files
 The pipeline is controlled using launch files, in the hpc_pipeline folder on the remote server open the launch_TEMPLATE.sh file by double clicking in it from the left hand menu.
 You will need to edit a few bits of information before you can run the hpc_pipeline: 
-- `JOBNAME="descriptive-name"` - A short descriptive name for the job, can be anything but its important it is unique to any other running jobs e.g. `fish8-11Spont`
+- `JOBNAME="descriptive-name"` - A short descriptive name for the job, can be anything without spaces but its important it is unique to any other running jobs e.g. `fish8-11Spont`
 - `INPUTFOLDER="/path/to/folder/with/multiple/fish/folders"` - The folder in which the fish folders to process are
 - `OUTPUTFOLDER="/path/where/s2p/output/should/save"` - The folder in which the finished fish will be saved
 - `JOBTYPE="full-pipeline"` - The type of job, for now leave this as full-pipeline which will run everything
