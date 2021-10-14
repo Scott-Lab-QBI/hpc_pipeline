@@ -136,8 +136,10 @@ def main():
             if next_job:
                 assert not next_job.is_finished(), "Next job was finished before having started, implies it used old data, not sure what to do, crashing."
                 next_job.start_job()
+                logging.info(f'Next job started: {next_job}')
                 incomplete_jobs.append(next_job)
 
+            logging.info(f'Removing finished job from incomplete_jobs: {job}')
             incomplete_jobs.remove(job)
             
         finished_jobs = []
@@ -390,22 +392,23 @@ class Warp2Zbrains(HPCJob):
 
 
     def log_status(self):
-        fish_num = os.path.basename(self.fish_abs_path).split('fish')[1].split('_')[0]
+        fish_num = os.path.basename(self.ants_output_path).split('fish')[1].split('_')[0]
         logging.info(f"FISH_STATUS: fish_{fish_num}, Running ANTs, Latest HPC id: {self.get_latest_job_id()}")
 
 
     def is_finished(self):
         """ Will check if final zbrains files exist
         """
-        fish_num = os.path.basename(self.fish_abs_path).split('fish')[1].split('_')[0]
+        fish_num = os.path.basename(self.ants_output_path).split('fish')[1].split('_')[0]
         zbrain_roi_filepath = os.path.join(self.ants_output_path, f'ROIs_zbrainspace_{fish_num}.csv')
         find_command = f'ls {zbrain_roi_filepath}'
         logging.info(f'ssh exec: {find_command}')
         stdin, stdout, stderr = self.ssh.exec_command(find_command)
-        find_result = stdout.readlines()
+        ls_result = stdout.readlines()
 
-        # A lack of error message means we are finished
-        return not "No such file or directory" in find_result
+        # ls will return the filepath to stdout if exists
+        # if not, will print to stderr. 
+        return zbrain_roi_filepath in ls_result
 
 
 class FullFishs2p(HPCJob):
