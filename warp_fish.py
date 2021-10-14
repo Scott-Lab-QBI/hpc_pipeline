@@ -161,6 +161,7 @@ def make_meanImg_stack(s2p_output_path, output_nrrd):
             continue
         ops = np.load(ops_path, allow_pickle=True).item()
         meanImg = ops.get('meanImg')
+        assert meanImg is not None, f'suite2p meanImg is missing from plane {plane_idx}, cannot build meanImg stack.'
         if not initalised:
             fish_stack = np.zeros((len(all_folders),meanImg.shape[0],meanImg.shape[1]), dtype=np.float32)
             initalised = True
