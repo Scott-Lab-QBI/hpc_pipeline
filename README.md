@@ -32,7 +32,7 @@ Initially connect VS code to Awoonga:
 - Wait a few minutes for VS code to install on Awoonga, you may be prompted for your password again
 - Once installation is done, press `ctrl` + `shift` + `\`` to open a terminal on Awoonga
 
-You will only need to complete the above step once, in the future to log into Awoonga or Mango you will only need to follow the steps in 'logging in' in the section on launching a job below.
+You will only need to complete the above step once, in the future to log into Awoonga or Moss you will only need to follow the steps in 'logging in' in the section on launching a job below.
 
 Throughout the rest of this document you will need to type commands into this terminal, you can manually retype the commands or you can copy the commands from this page and then Right-click on the terminal to paste. Copy this command into the terminal window and replace "your-user-name" with your UQ user name.
 ```
@@ -80,12 +80,12 @@ cd ~/
 git clone https://github.com/Scott-Lab-QBI/hpc_pipeline.git
 ```
 
-## Set up the hpc_pipeline on the command server (Mango)
-Now that the hpc_pipeline is installed on Awoonga we will also need to also install it on the command server. The command server takes the place of a human checking on the HPC, it will check on the state of the jobs on the HPC and restart jobs when they fail. We will be using the mango computer from EAIT. The next few steps will create a second VS code window, one logged into Awoonga and a new window which will be logged into Mango. You can tell which computer each window is logged into by checking the little green box in the bottom left of the VS code window. The rest of these instructions should be run in the Mango VS code window, you can close the Awoonga window if you want. 
+## Set up the hpc_pipeline on the command server (Moss)
+Now that the hpc_pipeline is installed on Awoonga we will also need to also install it on the command server. The command server takes the place of a human checking on the HPC, it will check on the state of the jobs on the HPC and restart jobs when they fail. We will be using the moss computer from EAIT. The next few steps will create a second VS code window, one logged into Awoonga and a new window which will be logged into Moss. You can tell which computer each window is logged into by checking the little green box in the bottom left of the VS code window. The rest of these instructions should be run in the Moss VS code window, you can close the Awoonga window if you want. 
 
-Repeat the steps listed under the heading "Initially connect VS code to Awoonga" but using the remote server address `mango.eait.uq.edu.au`
+Repeat the steps listed under the heading "Initially connect VS code to Awoonga" but using the remote server address `moss.labs.eait.uq.edu.au`
 
-Now, run the following commands in the terminal to install a copy of the hpc_pipeline on Mango.
+Now, run the following commands in the terminal to install a copy of the hpc_pipeline on Moss.
 ```
 cd ~/
 git clone git@github.com:Scott-Lab-QBI/hpc_pipeline.git
@@ -106,27 +106,28 @@ pip install setuptools-rust
 pip install paramiko
 ```
 
-### Set up SSH keys between Mango and Awoonga
-To allow the command server (Mango) to access Awoonga without you there to enter your password we need to set up a pair of keys ([more info on keys](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-2)). First we will need to generate some keys for your account on Mango, use the default install location with no pass phrase after entering these commands in the terminal on Mango. 
+### Set up SSH keys between Moss and Awoonga
+To allow the command server (Moss) to access Awoonga without you there to enter your password we need to set up a pair of keys ([more info on keys](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-2)). First we will need to generate some keys for your account on Moss, use the default install location with no pass phrase after entering these commands in the terminal on Moss. 
 ```
 ssh-keygen -t ed25519
 ssh-copy-id ${UQUSERNAME}@awoonga.qriscloud.org.au
 ```
 
 ## Launch a job
-The previous steps only need to be completed once to initially set up the hpc_pipeline. To use the pipeline, we just need to specify the details of the job to be run and then to start the job using a launch file. To do this log into the command server (Mango) 
+The previous steps only need to be completed once to initially set up the hpc_pipeline. To use the pipeline, we just need to specify the details of the job to be run and then to start the job using a launch file. To do this log into the command server (Moss) 
 
 ### Logging in to remote computers
 - Open VS code
 - Press `ctrl` + `shift` + `p` to open the VS code command palette
 - type in "Remote-SSH: Connect to Host" and press enter 
-- select awoonga.qriscloud.org.au or mango.eait.uq.edu.au from the list
+- select awoonga.qriscloud.org.au or moss.labs.eait.uq.edu.au from the list
 - press `ctrl` + `shift` + `\`` to open a terminal
 
 ### Open your home directory
 To edit files on a remote server:
 - press `ctrl` + `shift` + `e` and click open folder.
 - select the folder `/home/your-user-name` where "your-user-name" is your uq user name
+- if prompted, click yes you trust the authors
 - The files in this folder should now appear in the left hand menu
 
 ### launch files
@@ -147,7 +148,7 @@ If you get a permissoion denied error message see the additional information bel
 
 
 ## Checking on a job or debugging
-To check if the hpc_pipeline is running in a terminal on Mango type the command
+To check if the hpc_pipeline is running in a terminal on Moss type the command
 ```
 pstat
 ```
@@ -190,5 +191,5 @@ You should now be able to execute the file.
 
 
 ### External server
-The restarting functionality of the hpc_pipeline is provided by the hpc_pipeline.py file which should be run on a server seperate to the computing cluster. For this server we have chosen to use the Mango computer hosted by EAIT. Each time a job is started it moves into the background on the control server (Mango), it will check on the computing cluster every few hours and restart any jobs that have failed. The server communicates with the HPC cluster by setting up an SSH connection using paramiko, it then executes varios bash commands on the cluster to launch and monitor the state of jobs. 
+The restarting functionality of the hpc_pipeline is provided by the hpc_pipeline.py file which should be run on a server seperate to the computing cluster. For this server we have chosen to use the Moss computer hosted by EAIT. Each time a job is started it moves into the background on the control server (Moss), it will check on the computing cluster every few hours and restart any jobs that have failed. The server communicates with the HPC cluster by setting up an SSH connection using paramiko, it then executes varios bash commands on the cluster to launch and monitor the state of jobs. 
 
