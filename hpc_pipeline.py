@@ -13,13 +13,13 @@ import json
 import shutil
 import datetime
 
-# How long to wait before checking on running jobs
-WAITTIME = 3 * 60 * 60
-# HPC ssh address to use
-HPCHOSTNAME='awoonga.qriscloud.org.au'
-#HPCHOSTNAME='flashlite.rcc.uq.edu.au'
+# How long to wait before checking on running jobs in seconds
+WAITTIME = 3 * 60 * 60 
+# HPC ssh address to use, get from env variables or default to awoonga
+HPCHOSTNAME=os.getenv('HPCHOSTNAME', 'awoonga.qriscloud.org.au')
 # HPC user account to use, set as environment variable
 USERNAME=os.getenv('UQUSERNAME')
+assert USERNAME is not None, "Could not get username from Environment"
 # Version
 HPCPIPELINEVERSION=1.0
 # Folder where any data ish files should go (e.g. planes_left)
@@ -507,7 +507,7 @@ class ParallelFishs2p(FullFishs2p):
         ## Create json file of planes left to do
         contents = json.dumps(self.planes_left)
         # TODO : pass exp_name explicitly shouldn't be splitting from filename like this
-        exp_name = self.s2p_config_json.split('_ops_1P_whole.json')[0]
+        exp_name = self.s2p_config_json.split('_ops_1P_whole.json')[0].split('/')[-1]
         fish_num = os.path.basename(self.fish_abs_path).split('fish')[1].split('_')[0]
         planes_left_json = os.path.join(DATADIR, f'{exp_name}_fish{fish_num}_planes_left.json')
         with open(planes_left_json, 'w') as fp:
