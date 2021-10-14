@@ -24,6 +24,7 @@ assert USERNAME is not None, "Could not get username from Environment"
 HPCPIPELINEVERSION=1.0
 # Folder where any data ish files should go (e.g. planes_left)
 DATADIR=os.path.join(os.path.expanduser('~'), 'hpc_pipeline/data')
+HPCDATADIR=f'/home/{USERNAME}/hpc_pipeline/data'
 
 
 def main():
@@ -155,7 +156,7 @@ def transfer_s2p_args(ssh, exp_name, s2p_config_json):
 
     ## move to server
     ftp_client = ssh.open_sftp()
-    ftp_client.put(exp_s2p_filename, exp_s2p_filename)
+    ftp_client.put(exp_s2p_filename, HPCDATADIR)
     logging.info(f"Sent {exp_s2p_filename} to server.")
     return exp_s2p_filename
 
@@ -518,7 +519,7 @@ class ParallelFishs2p(FullFishs2p):
 
         ## Send over to cluster
         ftp_client = self.ssh.open_sftp()
-        ftp_client.put(planes_left_json, planes_left_json)
+        ftp_client.put(planes_left_json, HPCDATADIR)
         
         ## Launch and check array
         launch_job = f'python ~/hpc_pipeline/submit_fish_sliced_job.py {self.fish_abs_path} {self.fish_output_folder} {self.s2p_config_json} {planes_left_json}'
