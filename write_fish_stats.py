@@ -31,8 +31,9 @@ def main():
     for i, plane in enumerate(plane_folders):
         ops = np.load(os.path.join(plane, 'ops.npy'), allow_pickle=True).item()
         stat = np.load(os.path.join(plane, 'stat.npy'), allow_pickle=True)
+        iscell = np.load(os.path.join(plane, 'iscell.npy'), allow_pickle=True)
 
-        num_rois = len(stat)
+        num_rois = int(sum(iscell[:, 0]))
         total_rois += num_rois
 
         expected_files = ['F.npy', 'Fall.mat', 'Fneu.npy','iscell.npy','ops.npy','spks.npy','stat.npy']
