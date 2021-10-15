@@ -157,7 +157,6 @@ def transfer_s2p_args(ssh, exp_name, s2p_config_json):
 
     ## move to server
     ftp_client = ssh.open_sftp()
-    print(exp_s2p_filename, hpc_exp_s2p_filename)
     ftp_client.put(exp_s2p_filename, hpc_exp_s2p_filename)
     logging.info(f"Sent {exp_s2p_filename} to server.")
     return exp_s2p_filename
@@ -541,6 +540,19 @@ class ParallelFishs2p(FullFishs2p):
         total_planes = self.s2p_ops.get('nplanes')
         percent_done = planes_left / self.s2p_ops.get('nplanes')
         logging.info(f"FISH_STATUS: fish_{fish_num}, {planes_left}/{total_planes} planes, {int(percent_done * 100)}% done, Latest HPC id: {self.get_latest_job_id()}[]")
+ 
+
+    def is_finished(self):
+        finished = super().is_finished()
+
+        ## If finished, write summary statistics for this fish, then return
+        if finished:
+            # just run on head node
+            stats_file = os.path.join(self.fish_output_folder, 's2p_stats.txt')
+            command = f'python ~/hpc_pipeline/write_fish_stats.py {self.fish_output_folder} >> {stats_file}'
+            run_command(self.ssh, command)
+
+        return finished
 
 class SlicedFishs2p(HPCJob):
     """ Run a sliced fish through suite2p using arguments from specified config
