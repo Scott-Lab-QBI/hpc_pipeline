@@ -196,6 +196,12 @@ To stop a job from running
 
 ## Additional information about the hpc_pipeline
 
+### Set up ssh keys from your Windows computer to Awoonga or Moss
+- Open powershell
+- Check if you already have an SSH key `ls .ssh`, check for a file called `id_rsa.pub`
+- if no file, type `ssh-keygen`, follow prompts
+- Copy key to remote server `type $env:USERPROFILE\.ssh\id_rsa.pub | ssh uqjsmith@moss.labs.eait.uq.edu.au "cat >> .ssh/authorized_keys"`, change uqjsmith to your username, change moss link to awoonga if preferred, enter password
+
 ### Permission denied when launching a job
 If you tried to run a launch file (e.g. `./launch_TEMPLATE.sh`) and got a permission denied error, you may need to make the file executable, try the following (substituting the filename for whatever file you were trying to run
 ```
