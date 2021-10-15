@@ -93,7 +93,7 @@ git clone https://github.com/Scott-Lab-QBI/hpc_pipeline.git
 Now we need to make sure the hpc_pipeline knows which user account to use when it tries to connect to awoonga, in the following command replace "your-user-name" with your UQ user name
 ```
 echo "export UQUSERNAME=your-user-name" >> ~/.bashrc
-alias pstat='python3 ~/hpc_pipeline/monitor_pipeline.py'
+echo "alias pstat='python3 ~/hpc_pipeline/monitor_pipeline.py'" >> ~/.bashrc
 source ~/.bashrc
 ```
 
