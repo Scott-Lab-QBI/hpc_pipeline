@@ -21,7 +21,7 @@ users_school = os.getenv('UQSCHOOL')
 
 ## Build pbs script 
 file_contents = f"""#!/bin/bash
-#PBS -N {fish_num}_ants
+#PBS -N {fish_num}_ANTs
 #PBS -A {users_school}
 #PBS -l select=1:ncpus=6:mem=110GB:vmem=110GB
 #PBS -l walltime=06:00:00
