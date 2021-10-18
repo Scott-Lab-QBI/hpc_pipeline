@@ -69,7 +69,9 @@ def print_status(do_print=True):
     controllers = [] # list of tuples of controller pid's and name
     for line in output.split('\n'):
         if 'hpc_pipeline.py' in line:
-            pid = line.split(' ')[1]
+            split = line.split(' ')
+            split.remove('')
+            pid = split[1]
             job_name = line.split(' ')[-1]
             controllers.append((pid, job_name))
 

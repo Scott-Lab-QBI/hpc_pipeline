@@ -135,7 +135,8 @@ def main():
             # If there is a job to do after this one, lets schedule it
             next_job = job.get_next_job()
             if next_job:
-                assert not next_job.is_finished(), "Next job was finished before having started, implies it used old data, not sure what to do, crashing."
+                if next_job.is_finished():
+                    logging.info(f"Next job was finished before having started, job: {next_job}")
                 next_job.start_job()
                 logging.info(f'Next job started: {next_job}')
                 incomplete_jobs.append(next_job)
@@ -407,6 +408,7 @@ class Warp2Zbrains(HPCJob):
         logging.info(f'ssh exec: {find_command}')
         stdin, stdout, stderr = self.ssh.exec_command(find_command)
         ls_result = stdout.readlines()
+        ls_result = [x.strip() for x in ls_result]
 
         # ls will return the filepath to stdout if exists
         # if not, will print to stderr. 
@@ -467,17 +469,23 @@ class FullFishs2p(HPCJob):
 
         stdin, stdout, stderr = self.ssh.exec_command(find_command)
         find_result = stdout.readlines()
+        files_joined = ','.join(find_result)
 
-        num_files_found = len(find_result)
-
+        # Check every file required exists
         nplanes = self.s2p_ops.get('nplanes')
         assert nplanes is not None, f"nplanes not found in config file: {self.s2p_config_json}"
-        # 8 files per plane (inc. planex dir) +1 for the original directory
-        total_files_expected = (nplanes * self.FILESPERFISH) + 1
+        all_files = ['ops.npy', 'Fneu.npy','Fall.mat','F.npy','spks.npy','stat.npy','iscell.npy']
 
-        logging.info(f'For fish found: {num_files_found} files, Of {total_files_expected} expected')
-        assert num_files_found <= total_files_expected, f"Found more files ({num_files_found}) than expected ({total_files_expected}), unclear what to do, exiting."
-        return total_files_expected == num_files_found
+        for plane in range(nplanes):
+            for filename in all_files:
+                plane_filename = f'plane{plane}/{filename}'
+                #logging.info(plane_filename)
+                if plane_filename not in files_joined:
+                    logging.info(f'Not finished, missing file: {plane_filename}')
+                    return False
+
+        return True
+
 
     def __repr__(self):
         return f'FullFishs2p({self.fish_abs_path}, {self.fish_output_folder}, {self.s2p_config_json})'
