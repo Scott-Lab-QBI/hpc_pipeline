@@ -146,7 +146,7 @@ def make_meanImg_stack(s2p_output_path, output_nrrd):
     """ Given the folder of fish s2p output make a single 3D stack of the
         meanImage from each plane.
     """
-    all_folders = glob.glob(os.path.join(s2p_output_path, '*'))
+    all_folders = glob.glob(os.path.join(s2p_output_path, 'plane*'))
     # Remove combined folder 
     for folder in all_folders:
         if 'combined' in folder:
@@ -178,7 +178,7 @@ def make_meanImg_stack(s2p_output_path, output_nrrd):
 def write_csv(s2p_output_path, output_file, pix_dims=[1.28, 1.28, 5]):
     """ Create a csv file will all ROIs for the fish
     """
-    planes = glob.glob(os.path.join(s2p_output_path, '*'))
+    planes = glob.glob(os.path.join(s2p_output_path, 'plane*'))
     # Sort folders based on digits after plane
     planes.sort(key=lambda x : int(x[-7:].split('plane')[1]))
 
