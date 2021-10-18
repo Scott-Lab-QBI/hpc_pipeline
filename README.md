@@ -202,6 +202,17 @@ To stop a job from running
 - if no file, type `ssh-keygen`, follow prompts
 - Copy key to remote server `type $env:USERPROFILE\.ssh\id_rsa.pub | ssh uqjsmith@moss.labs.eait.uq.edu.au "cat >> .ssh/authorized_keys"`, change uqjsmith to your username, change moss link to awoonga if preferred, enter password
 
+
+### Joining data from two experiments on the same fish (Using symlinks)
+Often a single fish is used in two or more sets of data collections e.g. spontaneous for several minutes as well as an assay of stimuli. In these cases the two data sets can be combined to allow suite2p to join the ROIs between both sets. The script `symlink_data.py` implements this functionality by creating symbolic links (like shortcuts on windows) in a new folder that points to both datasets, suite2p can then be run on this folder of symlinks as if it was one big data collection. 
+
+The script shold be run on Awoonga or Flashlite (not Moss):
+```
+python symlink_data.py /path/to/sponaneous/data /path/to/stimuli/assay /new/output/folder/for/symlinks
+```
+Where `/path/to/spontaneous/data` and `/path/to/stimuli/assay` are folders containing equal numbers of fish folders with tifs inside. `/new/output/folder/for/symlinks` is the folder in which a set of new fish folders will be created with the symlinks to the original data.
+
+
 ### Permission denied when launching a job
 If you tried to run a launch file (e.g. `./launch_TEMPLATE.sh`) and got a permission denied error, you may need to make the file executable, try the following (substituting the filename for whatever file you were trying to run
 ```
