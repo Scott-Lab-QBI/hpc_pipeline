@@ -412,7 +412,13 @@ class Warp2Zbrains(HPCJob):
 
         # ls will return the filepath to stdout if exists
         # if not, will print to stderr. 
-        return zbrain_roi_filepath in ls_result
+        finished = zbrain_roi_filepath in ls_result
+
+        if finished: 
+            fish_num = os.path.basename(self.ants_output_path).split('fish')[1].split('_')[0]
+            logging.info(f"FISH_STATUS: fish_{fish_num}, Finished warping.")
+
+        return finished
 
 
 class FullFishs2p(HPCJob):
