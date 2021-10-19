@@ -9,7 +9,8 @@ import subprocess
 import os
 
 # HPC ssh address to use
-HPCHOSTNAME='awoonga.qriscloud.org.au'
+AWOOHPCHOSTNAME='awoonga.qriscloud.org.au'
+FLASHHPCHOSTNAME='flashlite.rcc.uq.edu.au'
 # HPC user account to use, set as environment variable
 USERNAME=os.getenv('UQUSERNAME')
 PIDIDX=0
@@ -35,22 +36,26 @@ def main():
         print('Invalid index:', args.job_idx)
         return
 
-    kill_awoonga_jobs = False if input('Kill associated jobs on awoonga too (Y/n)? ').lower() == 'n' else True
+    kill_hpc_jobs = False if input('Kill associated jobs on HPC also (Y/n)? ').lower() == 'n' else True
 
     data_to_kill = controller_data[int(args.job_idx)]
     # data to kill is a list with two items, the first has form <job name> and <pid>
     pid = data_to_kill[0][0]
 
-    if kill_awoonga_jobs:
+    if kill_hpc_jobs:
+        
+        ## which cluster
+        hpc_hostname = FLASHHPCHOSTNAME if input('Jobs on Awoonga(A)[default] or Flashlite(F)? (A/f)').lower() == 'f' else AWOOHPCHOSTNAME
+
         # start ssh etc.
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(HPCHOSTNAME, username=USERNAME)
+        ssh.connect(hpc_hostname, username=USERNAME)
 
         job_ids = [x.split(' ')[-1].strip() for x in data_to_kill[1] if 'None' not in x]
         job_ids_string = ' '.join(job_ids)
         awoonga_kill_string = f"qdel {job_ids_string}"
-        print('Awoonga kill string:', awoonga_kill_string)
+        print('HPC kill string:', awoonga_kill_string)
 
         # Do awoonga kill
         stdin, stdout, stderr = ssh.exec_command(awoonga_kill_string)
