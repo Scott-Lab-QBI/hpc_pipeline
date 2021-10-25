@@ -221,6 +221,17 @@ chmod a+x launch_TEMPLATE.sh
 You should now be able to execute the file.
 
 
+### Install ANTs
+The Advanced Normalisation Tools (ANTs) allow us to warp images so they can be compared within a common space. To install ANTs 
+- Log into Awoonga 
+- Enter command `module load CMake/3.15.0-gnu-7.2.0`
+- The next two steps refer to specific sections of the final step (following the normal ANTs instructions)
+- Make sure to change the install location from `/opt/ANTs` to `/home/your-username/ANTs`, replaceing `your-username` with your uq username
+- In the final, "Post installation" step replace `export ANTSPATH=/opt/ANTs/bin/` with the path from the last step.
+- Follow instructions here [https://github.com/ANTsX/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS](https://github.com/ANTsX/ANTs/wiki/Compiling-ANTs-on-Linux-and-Mac-OS)
+
+
+
 ### External server
 The restarting functionality of the hpc_pipeline is provided by the hpc_pipeline.py file which should be run on a server seperate to the computing cluster. For this server we have chosen to use the Moss computer hosted by EAIT. Each time a job is started it moves into the background on the control server (Moss), it will check on the computing cluster every few hours and restart any jobs that have failed. The server communicates with the HPC cluster by setting up an SSH connection using paramiko, it then executes varios bash commands on the cluster to launch and monitor the state of jobs. 
 
