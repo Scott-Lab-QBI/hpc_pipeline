@@ -70,6 +70,10 @@ To Activate and use the suite2p environment you can use the command
 ```
 conda activate suite2p
 ```
+Finally we need to install nrrd for warping images later in ANTs, run:
+```
+conda install -c conda-forge pynrrd
+```
 
 ### Download the hpc_pipeline
 To install the hpc_pipeline on Awoonga we will first need to go back to the home directory and then download the code
