@@ -32,7 +32,7 @@ Initially connect VS code to Awoonga:
 - Wait a few minutes for VS code to install on Awoonga, you may be prompted for your password again
 - Once installation is done, press `ctrl` + `shift` + `` ` `` to open a terminal on Awoonga
 
-You will only need to complete the above step once, in the future to log into Awoonga or Moss you will only need to follow the steps in 'logging in' in the section on launching a job below.
+You will only need to complete the above step once, in the future to log into Awoonga or Zfish you will only need to follow the steps in 'logging in' in the section on launching a job below.
 
 Throughout the rest of this document you will need to type commands into this terminal, you can manually retype the commands or you can copy the commands from this page and then Right-click on the terminal to paste. Copy this command into the terminal window and replace "your-user-name" with your UQ user name.
 ```
@@ -83,12 +83,12 @@ cd ~/
 git clone https://github.com/Scott-Lab-QBI/hpc_pipeline.git
 ```
 
-## Set up the hpc_pipeline on the command server (Moss)
-Now that the hpc_pipeline is installed on Awoonga we will also need to also install it on the command server. The command server takes the place of a human checking on the HPC, it will check on the state of the jobs on the HPC and restart jobs when they fail. We will be using the moss computer from EAIT. The next few steps will create a second VS code window, one logged into Awoonga and a new window which will be logged into Moss. You can tell which computer each window is logged into by checking the little green box in the bottom left of the VS code window. The rest of these instructions should be run in the Moss VS code window, you can close the Awoonga window if you want. 
+## Set up the hpc_pipeline on the command server (Zfish)
+Now that the hpc_pipeline is installed on Awoonga we will also need to also install it on the command server. The command server takes the place of a human checking on the HPC, it will check on the state of the jobs on the HPC and restart jobs when they fail. We will be using the Zfish computer from EAIT. The next few steps will create a second VS code window, one logged into Awoonga and a new window which will be logged into Zfish. You can tell which computer each window is logged into by checking the little green box in the bottom left of the VS code window. The rest of these instructions should be run in the Zfish VS code window, you can close the Awoonga window if you want. 
 
-Repeat the steps listed under the heading "Initially connect VS code to Awoonga" but using the remote server address `moss.labs.eait.uq.edu.au`
+Repeat the steps listed under the heading "Initially connect VS code to Awoonga" but using the remote server address `uqjarno4-zfish.zones.eait.uq.edu.au`
 
-Now, run the following commands in the terminal to install a copy of the hpc_pipeline on Moss.
+Now, run the following commands in the terminal to install a copy of the hpc_pipeline on Zfish.
 ```
 cd ~/
 git clone https://github.com/Scott-Lab-QBI/hpc_pipeline.git
@@ -101,7 +101,7 @@ echo "alias pstat='python3 ~/hpc_pipeline/monitor_pipeline.py'" >> ~/.bashrc
 source ~/.bashrc
 ```
 
-### Install anaconda on Moss
+### Install anaconda on Zfish
 Before we can install Suite2p we will need to install anaconda, agree to the licence (press and hold enter to scroll to bottom of the licence and type yes), use default install locations (just press enter when asked about install locations) and then type yes to initialise miniconda.
 ```
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
@@ -121,8 +121,8 @@ pip install setuptools-rust
 pip install paramiko
 ```
 
-### Set up SSH keys between Moss and Awoonga
-To allow the command server (Moss) to access Awoonga without you there to enter your password we need to set up a pair of keys ([more info on keys](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-2)). First we will need to generate some keys for your account on Moss, use the default install location with no pass phrase after entering these commands in the terminal on Moss. 
+### Set up SSH keys between Zfish and Awoonga
+To allow the command server (Zfish) to access Awoonga without you there to enter your password we need to set up a pair of keys ([more info on keys](https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-2)). First we will need to generate some keys for your account on Zfish, use the default install location with no pass phrase after entering these commands in the terminal on Zfish. 
 ```
 ssh-keygen -t ed25519
 ```
@@ -132,13 +132,13 @@ ssh-copy-id ${UQUSERNAME}@awoonga.qriscloud.org.au
 ```
 
 ## Launch a job
-The previous steps only need to be completed once to initially set up the hpc_pipeline. To use the pipeline, we just need to specify the details of the job to be run and then to start the job using a launch file. To do this log into the command server (Moss) 
+The previous steps only need to be completed once to initially set up the hpc_pipeline. To use the pipeline, we just need to specify the details of the job to be run and then to start the job using a launch file. To do this log into the command server (Zfish) 
 
 ### Logging in to remote computers
 - Open VS code
 - Press `ctrl` + `shift` + `p` to open the VS code command palette
 - type in "Remote-SSH: Connect to Host" and press enter 
-- select awoonga.qriscloud.org.au or moss.labs.eait.uq.edu.au from the list
+- select awoonga.qriscloud.org.au or uqjarno4-zfish.zones.labs.eait.uq.edu.au from the list
 - press `ctrl` + `shift` + `\`` to open a terminal
 
 ### Open your home directory
@@ -166,7 +166,7 @@ If you get a permissoion denied error message see the additional information bel
 
 
 ## Checking on a job or debugging
-To check if the hpc_pipeline is running in a terminal on Moss type the command
+To check if the hpc_pipeline is running in a terminal on Zfish type the command
 ```
 pstat
 ```
@@ -200,17 +200,17 @@ To stop a job from running
 
 ## Additional information about the hpc_pipeline
 
-### Set up ssh keys from your Windows computer to Awoonga or Moss
+### Set up ssh keys from your Windows computer to Awoonga or Zfish
 - Open powershell
 - Check if you already have an SSH key `ls .ssh`, check for a file called `id_rsa.pub`
 - if no file, type `ssh-keygen`, follow prompts
-- Copy key to remote server `type $env:USERPROFILE\.ssh\id_rsa.pub | ssh uqjsmith@moss.labs.eait.uq.edu.au "cat >> .ssh/authorized_keys"`, change uqjsmith to your username, change moss link to awoonga if preferred, enter password
+- Copy key to remote server `type $env:USERPROFILE\.ssh\id_rsa.pub | ssh uqjsmith@uqjarno4-zfish.zones. "cat >> .ssh/authorized_keys"`, change uqjsmith to your username, change Zfish link to awoonga if preferred, enter password
 
 
 ### Joining data from two experiments on the same fish (Using symlinks)
 Often a single fish is used in two or more sets of data collections e.g. spontaneous for several minutes as well as an assay of stimuli. In these cases the two data sets can be combined to allow suite2p to join the ROIs between both sets. The script `symlink_data.py` implements this functionality by creating symbolic links (like shortcuts on windows) in a new folder that points to both datasets, suite2p can then be run on this folder of symlinks as if it was one big data collection. 
 
-The script shold be run on Awoonga or Flashlite (not Moss):
+The script shold be run on Awoonga or Flashlite (not Zfish):
 ```
 python symlink_data.py /path/to/sponaneous/data /path/to/stimuli/assay /new/output/folder/for/symlinks
 ```
@@ -237,5 +237,5 @@ The Advanced Normalisation Tools (ANTs) allow us to warp images so they can be c
 
 
 ### External server
-The restarting functionality of the hpc_pipeline is provided by the hpc_pipeline.py file which should be run on a server seperate to the computing cluster. For this server we have chosen to use the Moss computer hosted by EAIT. Each time a job is started it moves into the background on the control server (Moss), it will check on the computing cluster every few hours and restart any jobs that have failed. The server communicates with the HPC cluster by setting up an SSH connection using paramiko, it then executes varios bash commands on the cluster to launch and monitor the state of jobs. 
+The restarting functionality of the hpc_pipeline is provided by the hpc_pipeline.py file which should be run on a server seperate to the computing cluster. For this server we have chosen to use the Zfish computer hosted by EAIT. Each time a job is started it moves into the background on the control server (Zfish), it will check on the computing cluster every few hours and restart any jobs that have failed. The server communicates with the HPC cluster by setting up an SSH connection using paramiko, it then executes varios bash commands on the cluster to launch and monitor the state of jobs. 
 
