@@ -88,59 +88,23 @@ def main():
         print(f'>>>> ROIs warped to zbrains space exist, skipping.')
 
 
-def get_range(foldername):
-    assert os.path.isdir(foldername)
-    if 'step' not in foldername:
-        nplanes=int(foldername.rsplit('SL')[-1].split('_')[0])
-    else:
-        slrange=int(foldername.rsplit('range')[-1].split('_')[0])
-        slstep=int(foldername.rsplit('step')[-1].split('_')[0])
-        nplanes=int((slrange/slstep)+1)
-    return nplanes
-
 def get_z_step(foldername):
+    ## Specific work around to keep mecp2 running, 
+    ## new requirement will be to keep filenames similar to original recording folders
+    ## Delete after mecp2's done processing.
+    if 'symlinked' in foldername:
+        print(">>>>>   HACK for original MECP2's which don't have step in filename   <<<<<<")
+        mecp2_step_size = 5
+        return mecp2_step_size
+
     if 'step' in foldername:
         z_step=int(foldername.split('step')[-1].split('_')[0]) # Takes the second instance in ones where it's been inputted twice
     else:
-        warning.warn('Step info not present in folder name, assuming range of 250 um')
+        #warnings.warn('Step info not present in folder name, assuming range of 250 um')
+        print('>>> Step info not present in folder name, assuming range of 250 um <<<')
         assert 'SL' in foldername, 'Number of slices not present in folder name'
         z_step=250/int(foldername.split('SL')[-1].split('_')[0])
     return z_step
-
-def file_locations(basefolder):
-    # Gets all of the file locations for one fish
-    assert os.path.isdir(basefolder)
-    suite2p_output_folder_list=glob.glob(basefolder+'/*/')
-    fish_folders=list()
-    slice_orders=list()
-    regex=re.compile(".+_(\d+)_.+fish(\d+).+")
-    fish_list=[''.join(regex.match(foldername).groups()) for foldername in suite2p_output_folder_list]
-    fish_list=set(fish_list)
-    #print(fish_list)
-    #print(suite2p_output_folder_list)
-    for fish in fish_list: #suite2p_output_folder in suite2p_output_folder_list:
-        output_folders=[foldername for foldername in suite2p_output_folder_list if ''.join(regex.match(foldername).groups())==fish]
-        #print(output_folders)
-        nplanes=get_range(output_folders[0])
-        fish_folder=list()
-        slice_order=list()
-        #assert os.path.isdir(suite2p_output_folder)
-        #assert os.path.isdir(suite2p_output_folder+'/plane0')
-        if 'Slice' in output_folders[0]:
-            for folder in output_folders:
-                assert 'Slice' in folder, 'All folders for this fish should have slice in their name'
-                assert os.path.isdir(folder+'/plane0'), 'No suite2p output found in '+folder
-                fish_folder.append(folder+'/plane0')
-                slice_number=int(folder.split('Slice')[1].split('_')[0])-1
-                slice_order.append(slice_number)
-        else:
-            fish_folder=glob.glob(output_folders[0]+'/*/')
-            slice_order=[int(folder.split('plane')[1].split('\\')[0]) for folder in fish_folder]
-        assert len(fish_folder)==nplanes, 'Number of folders does not match expected number of planes'
-        fish_folders.append(fish_folder)
-        slice_orders.append(slice_order)            
-    fish_folders=zip(fish_folders, slice_orders)    
-    return list(fish_folders) #Returns a list of fish with a sub-list for each containing all the folders in which to find the mean tiffs
 
 def make_meanImg_stack(s2p_output_path, output_nrrd):
     """ Given the folder of fish s2p output make a single 3D stack of the
