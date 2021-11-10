@@ -228,6 +228,9 @@ chmod a+x launch_TEMPLATE.sh
 ```
 You should now be able to execute the file.
 
+### Adding new users to Zfish
+On Zfish run `uq-add-user username`
+
 
 ### Install ANTs
 The Advanced Normalisation Tools (ANTs) allow us to warp images so they can be compared within a common space. To install ANTs 
