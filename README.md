@@ -206,6 +206,8 @@ To stop a job from running
 
 ### Set up ssh keys from your Windows computer to Awoonga or Zfish
 - Open powershell
+- type `C:` into powershell
+- Change to your home directory `cd Users/your-uq-username`, swap `your-uq-username` with your uq username
 - Check if you already have an SSH key `ls .ssh`, check for a file called `id_rsa.pub`
 - if no file, type `ssh-keygen`, follow prompts
 - Copy key to remote server `type $env:USERPROFILE\.ssh\id_rsa.pub | ssh uqjsmith@uqjarno4-zfish.zones.eait.uq.edu.au "cat >> .ssh/authorized_keys"`, change uqjsmith to your username
