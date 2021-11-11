@@ -208,7 +208,9 @@ To stop a job from running
 - Open powershell
 - Check if you already have an SSH key `ls .ssh`, check for a file called `id_rsa.pub`
 - if no file, type `ssh-keygen`, follow prompts
-- Copy key to remote server `type $env:USERPROFILE\.ssh\id_rsa.pub | ssh uqjsmith@uqjarno4-zfish.zones. "cat >> .ssh/authorized_keys"`, change uqjsmith to your username, change Zfish link to awoonga if preferred, enter password
+- Copy key to remote server `type $env:USERPROFILE\.ssh\id_rsa.pub | ssh uqjsmith@uqjarno4-zfish.zones.eait.uq.edu.au "cat >> .ssh/authorized_keys"`, change uqjsmith to your username
+- enter password
+- [Optional] Repeat the above and change Zfish link to `awoonga.qriscloud.org.au` to use ssh keys with Awoonga also
 
 
 ### Joining data from two experiments on the same fish (Using symlinks)
