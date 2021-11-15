@@ -97,6 +97,9 @@ def main():
         for job in incomplete_jobs:
             ants_job = Warp2Zbrains(ssh, job.fish_output_folder, args.output_folder)
             job.next_job = ants_job
+            # And for each ANTs job add a matlab visualisation job
+            fish_num = os.path.basename(job.fish_abs_path).split('fish')[1].split('_')[0]
+            vis_job = VisSingle(ssh, args.output_folder, fish_num)
 
     else:
         print('Job type not recognised.')
@@ -358,6 +361,43 @@ class HPCJob:
 
     def log_status(self):
         pass
+
+class VisSingle(HPCJob):
+    def __init__(self, ssh, pipeline_output_path, fish_num):
+        super().__init__(ssh)
+        self.pipeline_output_path = pipeline_output_path
+        self.fish_num = fish_num
+
+    def start_job(self):
+        launch_job = f'python ~/hpc_pipeline/submit_single_vis_job.py {self.pipeline_output_path} {self.fish_num}'
+
+        self.do_qsub_check_errors(launch_job)
+
+        self.log_status()
+
+
+
+    def log_status(self):
+        logging.info(f"FISH_STATUS: fish_{self.fish_num}, Matlab Vis, Latest HPC id: {self.get_latest_job_id()}")
+
+    def is_finished(self):
+        # Check warped_ROIs_fish%s.gif exists
+        # TODO : hardcoding and copied variable names
+        final_gif_filepath = os.path.join('/home/uqjarno4', f'warped_ROIs_fish{self.fish_num}.gif')
+        find_command = f'ls {final_gif_filepath}'
+        logging.info(f'ssh exec: {find_command}')
+        stdin, stdout, stderr = self.ssh.exec_command(find_command)
+        ls_result = stdout.readlines()
+        ls_result = [x.strip() for x in ls_result]
+
+        # ls will return the filepath to stdout if exists
+        # if not, will print to stderr. 
+        finished = final_gif_filepath in ls_result
+
+        if finished: 
+            logging.info(f"FISH_STATUS: fish_{self.fish_num}, Finished Visualisation.")
+
+        return finished
 
 
 class Warp2Zbrains(HPCJob):
