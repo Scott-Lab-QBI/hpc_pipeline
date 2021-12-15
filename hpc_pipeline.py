@@ -14,7 +14,7 @@ import shutil
 import datetime
 
 # How long to wait before checking on running jobs in seconds
-WAITTIME = 3 * 60 * 60 
+WAITTIME = 6 * 60 * 60
 # HPC ssh address to use, get from env variables or default to awoonga
 HPCHOSTNAME=os.getenv('HPCHOSTNAME', 'awoonga.qriscloud.org.au')
 # HPC user account to use, set as environment variable
@@ -99,7 +99,8 @@ def main():
             job.next_job = ants_job
             # And for each ANTs job add a matlab visualisation job
             fish_num = os.path.basename(job.fish_abs_path).split('fish')[1].split('_')[0]
-            vis_job = VisSingle(ssh, args.output_folder, fish_num)
+            #vis_job = VisSingle(ssh, args.output_folder, fish_num)
+            #ants_job.next_job = vis_job
 
     else:
         print('Job type not recognised.')
@@ -135,14 +136,16 @@ def main():
         ## remove finished jobs from incomplete jobs, start follow on jobs
         for job in finished_jobs:
 
-            # If there is a job to do after this one, lets schedule it
-            next_job = job.get_next_job()
-            if next_job:
+            next_job = job.next_job
+            while next_job:
                 if next_job.is_finished():
                     logging.info(f"Next job was finished before having started, job: {next_job}")
-                next_job.start_job()
-                logging.info(f'Next job started: {next_job}')
-                incomplete_jobs.append(next_job)
+                    next_job = next_job.next_job
+                else:
+                    next_job.start_job()
+                    logging.info(f'Next job started: {next_job}')
+                    incomplete_jobs.append(next_job)
+                    break
 
             logging.info(f'Removing finished job from incomplete_jobs: {job}')
             incomplete_jobs.remove(job)
@@ -383,7 +386,7 @@ class VisSingle(HPCJob):
     def is_finished(self):
         # Check warped_ROIs_fish%s.gif exists
         # TODO : hardcoding and copied variable names
-        final_gif_filepath = os.path.join('/home/uqjarno4', f'warped_ROIs_fish{self.fish_num}.gif')
+        final_gif_filepath = os.path.join(self.pipeline_output_path, f'vis_{self.fish_num}', f'warped_ROIs_fish{self.fish_num}.gif')
         find_command = f'ls {final_gif_filepath}'
         logging.info(f'ssh exec: {find_command}')
         stdin, stdout, stderr = self.ssh.exec_command(find_command)

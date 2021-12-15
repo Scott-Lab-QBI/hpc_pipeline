@@ -3,7 +3,7 @@
 JOBNAME="test-hpc-pipeline"                             # Can be anything unique
 INPUTFOLDER="/QRISdata/Q2396/SPIM_120170/Spontaneous"   # A folder containing individual folders for each fish
 OUTPUTFOLDER="/QRISdata/Q4008/Q2396/Spontaneous"        # An output folder where the finish fish folders will go
-JOBTYPE='fish-parallel'                                    # The type of job, for now leave this as fish-whole
+JOBTYPE='full-pipeline'                                    # The type of job, for now leave this as full-pipeline
 S2PCONFIG='ops_1P_whole.json'                           # Path to a json file containing the ops for suite2p
 
 ## COMMENTS
