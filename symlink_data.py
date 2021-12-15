@@ -27,13 +27,18 @@ def main():
     fish_nums = [get_fish_num(fish_path) for fish_path in fish_folders]
 
 
-    for fish_num in fish_nums:
+    for i, fish_num in enumerate(fish_nums):
         sym_link_index = 0
         mappings = []
         print(f'For fish: {fish_num}')
 
         ## Make a directory in output folder for this fish
-        fish_output_dir = os.path.join(args.symlinked_folder, f'symlinked_fish{fish_num}')
+        folder_details = f"{fish_folders[i].split('/')[-1].strip('.ome.tif')}_stitched" # This will be the experiments details e.g. MW_synchaud_20210304_scn1lab_fish03_2Hz_range250_step5_exposure10_power20_range245_step5_exposure10_power20
+        ## Hack of converting spon, spont, spontaneous, Spontaneous, Spon, Spont, aud, Aud, etc. -> symlinked
+        #exp_names = ['spontaneous','Spontaneous', 'spont','Spont', 'spon', 'Spon','auditory','Auditory','aud','Aud']
+        #for name in exp_names:
+        #    folder_details = folder_details.replace(name, 'symlinked') 
+        fish_output_dir = os.path.join(args.symlinked_folder, folder_details)
         if not os.path.isdir(fish_output_dir):
             os.makedirs(fish_output_dir)
 
