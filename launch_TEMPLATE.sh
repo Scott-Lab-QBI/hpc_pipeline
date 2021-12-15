@@ -11,6 +11,7 @@ S2PCONFIG='ops_1P_whole.json'                           # Path to a json file co
 # This comments will get saved in a .txt file with the same name as the log file.
 
 ## The below shouldn't need editing in normal use
+export HPCHOSTNAME='awoonga.qriscloud.org.au'         # Either 'awoonga.qriscloud.org.au' or 'flashlite.rcc.uq.edu.au'
 LOGDIR="logs"
 if [[ ! -d $LOGDIR ]]; then 
     echo "Log diretory $LOGDIR, doesn't exist, creating..."
