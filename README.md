@@ -220,6 +220,7 @@ Often a single fish is used in two or more sets of data collections e.g. spontan
 
 The script shold be run on Awoonga or Flashlite (not Zfish):
 ```
+cd hpc_pipeline
 python symlink_data.py /path/to/sponaneous/data /path/to/stimuli/assay /new/output/folder/for/symlinks
 ```
 Where `/path/to/spontaneous/data` and `/path/to/stimuli/assay` are folders containing equal numbers of fish folders with tifs inside. `/new/output/folder/for/symlinks` is the folder in which a set of new fish folders will be created with the symlinks to the original data.
