@@ -117,6 +117,11 @@ def make_meanImg_stack(s2p_output_path, output_nrrd):
             all_folders.remove(folder)
     # Sort folders based on digits after plane
     all_folders.sort(key=lambda x : int(x[-7:].split('plane')[1]))
+
+    # Exclude bottom plane, due to imaging that plane is a mash of 
+    # top and bottom. 
+    all_folders = all_folders[1:]
+
     print(all_folders)
     initalised = False
     for plane_idx, plane_path in enumerate(all_folders):
@@ -145,6 +150,10 @@ def write_csv(s2p_output_path, output_file, pix_dims=[1.28, 1.28, 5]):
     planes = glob.glob(os.path.join(s2p_output_path, 'plane*'))
     # Sort folders based on digits after plane
     planes.sort(key=lambda x : int(x[-7:].split('plane')[1]))
+
+    # Exclude bottom plane, due to imaging that plane is a mash of 
+    # top and bottom. 
+    planes = planes[1:]
 
     all_cells = np.zeros((0, 3))  # will be y, x, plane co-ordinates 
     for i, plane in enumerate(planes):
