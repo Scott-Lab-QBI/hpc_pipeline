@@ -101,7 +101,7 @@ git clone https://github.com/Scott-Lab-QBI/hpc_pipeline.git
 ## Set up the hpc_pipeline on the command server (Zfish)
 Now that the hpc_pipeline is installed on Awoonga we will also need to also install it on the command server. The command server takes the place of a human checking on the HPC, it will check on the state of the jobs on the HPC and restart jobs when they fail. We will be using the Zfish computer from EAIT. The next few steps will create a second VS code window, one logged into Awoonga and a new window which will be logged into Zfish. You can tell which computer each window is logged into by checking the little green box in the bottom left of the VS code window. The rest of these instructions should be run in the Zfish VS code window, you can close the Awoonga window if you want. 
 
-Repeat the steps listed under the heading "Initially connect VS code to Awoonga" but using the remote server address `uqjarno4-zfish.zones.eait.uq.edu.au`
+Repeat the steps listed under the heading "Initially connect VS code to Awoonga" but using the remote server address `uqjarno4-zfish.zones.eait.uq.edu.au` instead of Awoonga's address.
 
 Now, run the following commands in the terminal to install a copy of the hpc_pipeline on Zfish.
 ```
