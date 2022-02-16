@@ -311,6 +311,8 @@ def parse_job_id(line):
         return line.split('.awon')[0].strip('[]')
     if '.flash' in line:
         return line.split('.flash')[0].strip('[]')
+    if '.tinm' in line:
+        return line.split('.tinm')[0].strip('[]')
     return None
 
 
