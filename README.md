@@ -8,7 +8,7 @@ This repository contains tools for automating as many steps as possible in proce
 The hpc_pipeline is controlled by an external server (the command server) which launches jobs on Awoonga and periodically checks on them. To access the server you will need to be added, give your uq staff id (or student number) to Josh who will add you.
 
 ## Get an Awoonga account
-Follow instructions here [https://rcc.uq.edu.au/awoonga](https://rcc.uq.edu.au/awoonga). You may be required to undergo HPC training run by RCC, see [https://rcc.uq.edu.au/training](https://rcc.uq.edu.au/training).
+Follow instructions here [https://rcc.uq.edu.au/awoonga](https://rcc.uq.edu.au/awoonga). You may be required to undergo HPC training run by RCC, see [https://rcc.uq.edu.au/training](https://rcc.uq.edu.au/training). (May take a few days for your account to be approved). As description for the project add: "HPC required to analyse calcium imaging data from zebrafish, will need to launch multiple array jobs with 25-50 subjobs, each requesting ~4-6 cores and ~110GB of RAM."
 
 ## Install VS code
 Visual Studio code (VS code) is an integrated development environment built by Microsoft. It allows us to edit code/files on a remote server (like the HPC computers) as if the files were locally stored on our computer. Additionally, it has an integrated terminal which will allow us to execute commands on the HPC, like running the pipeline. 
