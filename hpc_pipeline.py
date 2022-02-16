@@ -82,8 +82,7 @@ def main():
         raise DeprecationWarning()
 
     elif args.job_type == 'ants-zbrain':
-        pass  # TODO : ignore general case for now, unlikely.
-        raise NotImplementedError()
+        incomplete_jobs = create_ants_warp_jobs(ssh, args.input_folder, args.output_folder)
 
     elif args.job_type == 'full-pipeline':
         # effectively, just create fish-parallel jobs and then tag on ants as next job
@@ -106,6 +105,7 @@ def main():
         print('Job type not recognised.')
         raise Exception('Job type not recognised.')
 
+    logging.debug('About to start main loop')
     ## Main loop
     while incomplete_jobs:
 
@@ -116,6 +116,8 @@ def main():
         finished_jobs = []
         ## for each incomplete job
         for job in incomplete_jobs:
+
+            logging.debug(f'Main loop for job: {job}')
 
             job.log_status()
 
@@ -131,12 +133,15 @@ def main():
                 continue
 
             # else, not running and not finished, so restart
+            logging.debug(f'main loop try: Start job: {job}')
             job.start_job()
 
         ## remove finished jobs from incomplete jobs, start follow on jobs
         for job in finished_jobs:
+            logging.debug(f'for job in finished_job: {job}')
 
             next_job = job.next_job
+            logging.debug(f'Next job: {next_job}')
             while next_job:
                 if next_job.is_finished():
                     logging.info(f"Next job was finished before having started, job: {next_job}")
@@ -153,6 +158,7 @@ def main():
         finished_jobs = []
 
         ## Wait some time before checking again
+        logging.debug(f'Start waiting for time')
         time.sleep(WAITTIME)    
 
 
@@ -171,7 +177,21 @@ def transfer_s2p_args(ssh, exp_name, s2p_config_json):
 def create_ants_warp_jobs(ssh, s2p_output_folders, output_folder):
     """ Create a list of ants warping jobs for all s2p output 
     """
-    raise NotImplementedError
+    ## Get a list of all fish
+    ls_fish = f'ls {input_folder}'
+    all_fish = run_command(ssh, ls_fish)
+    # ls results end in \n, need to strip away
+    all_fish = [filename.strip() for filename in all_fish]
+    input_folder = os.path.normpath(input_folder)
+
+    fish_jobs = []
+    for fish_base_name in all_fish:
+        fish_abs_path = os.path.join(input_folder, fish_base_name)
+        fish_job = Warp2Zbrains(ssh, s2p_output_folders, output_folder)
+        fish_jobs.append(fish_job)
+    
+    logging.info(f'Created several ANTs jobs: {fish_jobs}')
+    return fish_jobs
 
 def create_whole_fish_s2p_jobs(ssh, input_folder, output_folder, s2p_config_json, job_class, testing_pipeline=False):
     """ Create suite2p whole fish jobs for the cluster given the ssh connection
@@ -247,8 +267,13 @@ def run_command(ssh, command):
     Returns:
         List of strings of the output resulting from running the command
     """
+    logging.debug(f'run_command: {command}')
     stdin, stdout, stderr = ssh.exec_command(command)
-    return stdout.readlines()    
+    result = stdout.readlines()
+    errres = stderr.readlines()
+    logging.debug(f'stderr from command: {errres}')
+    logging.debug(f'Result from command: {result}')
+    return result
 
 def get_current_jobs(ssh):
     """ Given the ssh object return a list of all current jobs running 
@@ -260,14 +285,17 @@ def get_current_jobs(ssh):
         list of strings with the job id of all running jobs. Array jobs have 
           the [] removed. 
     """
+    logging.debug('Exec a qstat to see what is still running.')
     stdin, stdout, stderr = ssh.exec_command('qstat')
 
     running_jobs = []
     for line in stdout.readlines():
+        logging.debug(f'qstat return STDOUT: {line}')
         job_id = parse_job_id(line)
         if job_id:
             running_jobs.append(job_id)
     
+    logging.debug(f'Running jobs: {running_jobs}')
     return running_jobs
 
 def parse_job_id(line):
@@ -445,12 +473,14 @@ class Warp2Zbrains(HPCJob):
     def is_finished(self):
         """ Will check if final zbrains files exist
         """
+        logging.debug(f'In is_finished call of warp2zbrain class')
         fish_num = os.path.basename(self.ants_output_path).split('fish')[1].split('_')[0]
         zbrain_roi_filepath = os.path.join(self.ants_output_path, f'ROIs_zbrainspace_{fish_num}.csv')
         find_command = f'ls {zbrain_roi_filepath}'
         logging.info(f'ssh exec: {find_command}')
         stdin, stdout, stderr = self.ssh.exec_command(find_command)
         ls_result = stdout.readlines()
+        logging.debug(f'ls result of is_finished in warp2zbrain: {ls_result}')
         ls_result = [x.strip() for x in ls_result]
 
         # ls will return the filepath to stdout if exists
@@ -513,6 +543,7 @@ class FullFishs2p(HPCJob):
         Returns:
             Whether the fish is finished or not.
         """
+        # Get list of all planes and all files
         find_command = f'find {self.fish_output_folder}'
         logging.info(f'ssh exec: {find_command}')
 
@@ -528,10 +559,31 @@ class FullFishs2p(HPCJob):
         for plane in range(nplanes):
             for filename in all_files:
                 plane_filename = f'plane{plane}/{filename}'
-                #logging.info(plane_filename)
+                logging.debug(f'plane_filename: {plane_filename}')
                 if plane_filename not in files_joined:
                     logging.info(f'Not finished, missing file: {plane_filename}')
                     return False
+
+        # All files exist, now check if they open
+        # call write_fish_stats which checks plane stats and
+        # delete any planes that have files that don't open
+        command = f'python ~/hpc_pipeline/write_fish_stats.py {self.fish_output_folder}'
+        logging.debug(f'Try to call run command with command: {command}')
+        run_command(self.ssh, command)
+        logging.debug(f'Assume this is blocking?')
+
+        # if 's2p_stats.txt' exists, then everything opened
+        logging.debug(f'Now check if stats file exists.')
+        stats_file = os.path.join(self.fish_output_folder, 's2p_stats.txt')
+        command = f'ls {stats_file}'
+        logging.debug(f"Run command: {command}")
+        ls_result = [x.strip() for x in run_command(self.ssh, command)] # strip away new line characters
+        logging.debug(f'{stats_file not in ls_result} Test if stats_file exists, ls_result: {ls_result}')
+
+        # If stats_file doesn't exist, must have been errors.
+        if stats_file not in ls_result: 
+            logging.debug(f'is_finsihed return False (could not find stats file)')
+            return False
 
         return True
 
@@ -600,15 +652,15 @@ class ParallelFishs2p(FullFishs2p):
  
 
     def is_finished(self):
+        """
+
+        Preconditions:
+            Assumes none of the planes are currently running
+        """
+        logging.debug(f'running ParallelFishs2p.is_finsihed')
         finished = super().is_finished()
 
-        ## If finished, write summary statistics for this fish, then return
-        if finished:
-            # just run on head node
-            stats_file = os.path.join(self.fish_output_folder, 's2p_stats.txt')
-            command = f'python ~/hpc_pipeline/write_fish_stats.py {self.fish_output_folder} >> {stats_file}'
-            run_command(self.ssh, command)
-
+        logging.debug(f'parallelfish.is_finished() returning: {finished}')
         return finished
 
 class SlicedFishs2p(HPCJob):
