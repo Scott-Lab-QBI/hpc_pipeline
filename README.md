@@ -58,6 +58,17 @@ echo $UQSCHOOL
 ```
 These should print your username and school string.
 
+### Install anaconda on Awoonga
+Before we can install Suite2p we will need to install anaconda, agree to the licence (press and hold enter to scroll to bottom of the licence and type yes), use default install locations (just press enter when asked about install locations) and then type yes to initialise miniconda.
+```
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+```
+Now we can remove anaconda's install file and refresh the terminal 
+```
+rm Miniconda3-latest-Linux-x86_64.sh
+source ~/.bashrc
+```
 
 ### Install Suite2p
 We will need to download the code for [Suite2p](https://github.com/Scott-Lab-QBI/suite2p.git) by entering the commands below, first we will make sure we are in the home directory, enter the following commands into the terminal window
@@ -106,7 +117,7 @@ source ~/.bashrc
 ```
 
 ### Install anaconda on Zfish
-Before we can install Suite2p we will need to install anaconda, agree to the licence (press and hold enter to scroll to bottom of the licence and type yes), use default install locations (just press enter when asked about install locations) and then type yes to initialise miniconda.
+As before when installing Anaconda, agree to the licence (press and hold enter to scroll to bottom of the licence and type yes), use default install locations (just press enter when asked about install locations) and then type yes to initialise miniconda.
 ```
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh
