@@ -43,7 +43,7 @@ Throughout the rest of this document you will need to type commands into this te
 echo "export UQUSERNAME=your-user-name" >> ~/.bashrc
 ```
 For example, you might type `echo "export UQUSERNAME=uqjsmith" >> ~/.bashrc`.
-QRIS also requires we tell them which school we belong to at UQ, this varies between different lab members but is likely going to be `UQ-QBI`, `UQ-SCI-SBMS` or `UQ-EAIT-ITEE`. Replace "your-uq-school" with whichever is appropriate for you. If you are unsure which account is correct for you ask Josh, there is info about this on the QRIS pages somewhere but I can't find it right now.
+QRIS also requires we tell them which school we belong to at UQ, this varies between different lab members but is likely going to be `UQ-QBI`, `UQ-SCI-SBMS` or `UQ-EAIT-ITEE`. Replace "your-uq-school" with whichever is appropriate for you. If you are unsure which account is correct for you type the command `groups` into the terminal, see which of the above appears.
 ```
 echo "export UQSCHOOL=your-uq-school" >> ~/.bashrc
 ```
