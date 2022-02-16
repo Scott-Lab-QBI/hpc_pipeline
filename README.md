@@ -60,7 +60,7 @@ These should print your username and school string.
 
 
 ### Install Suite2p
-We will need to download the code for [Suite2p](https://github.com/Scott-Lab-QBI/suite2p.git), but first we will make sure we are in the home directory, enter the following commands into the terminal window
+We will need to download the code for [Suite2p](https://github.com/Scott-Lab-QBI/suite2p.git) by entering the commands below, first we will make sure we are in the home directory, enter the following commands into the terminal window
 ```
 cd ~/
 git clone https://github.com/Scott-Lab-QBI/suite2p.git
