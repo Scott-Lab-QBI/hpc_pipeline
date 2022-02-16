@@ -8,7 +8,7 @@ This repository contains tools for automating as many steps as possible in proce
 The hpc_pipeline is controlled by an external server (the command server) which launches jobs on Awoonga and periodically checks on them. To access the server you will need to be added, give your uq staff id (or student number) to Josh who will add you.
 
 ## Get an Awoonga account
-Follow instructions here [https://rcc.uq.edu.au/awoonga](https://rcc.uq.edu.au/awoonga). You may be required to undergo HPC training run by RCC, see [https://rcc.uq.edu.au/training](https://rcc.uq.edu.au/training).
+Follow instructions here [https://rcc.uq.edu.au/awoonga](https://rcc.uq.edu.au/awoonga). You may be required to undergo HPC training run by RCC, see [https://rcc.uq.edu.au/training](https://rcc.uq.edu.au/training). (May take a few days for your account to be approved). As description for the project add: "HPC required to analyse calcium imaging data from zebrafish, will need to launch multiple array jobs with 25-50 subjobs, each requesting ~4-6 cores and ~110GB of RAM."
 
 ## Install VS code
 Visual Studio code (VS code) is an integrated development environment built by Microsoft. It allows us to edit code/files on a remote server (like the HPC computers) as if the files were locally stored on our computer. Additionally, it has an integrated terminal which will allow us to execute commands on the HPC, like running the pipeline. 
@@ -43,7 +43,7 @@ Throughout the rest of this document you will need to type commands into this te
 echo "export UQUSERNAME=your-user-name" >> ~/.bashrc
 ```
 For example, you might type `echo "export UQUSERNAME=uqjsmith" >> ~/.bashrc`.
-QRIS also requires we tell them which school we belong to at UQ, this varies between different lab members but is likely going to be `UQ-QBI`, `UQ-SCI-SBMS` or `UQ-EAIT-ITEE`. Replace "your-uq-school" with whichever is appropriate for you. If you are unsure which account is correct for you ask Josh, there is info about this on the QRIS pages somewhere but I can't find it right now.
+QRIS also requires we tell them which school we belong to at UQ, this varies between different lab members but is likely going to be `UQ-QBI`, `UQ-SCI-SBMS` or `UQ-EAIT-ITEE`. Replace "your-uq-school" with whichever is appropriate for you. If you are unsure which account is correct for you type the command `groups` into the terminal, see which of the above appears.
 ```
 echo "export UQSCHOOL=your-uq-school" >> ~/.bashrc
 ```
@@ -58,9 +58,20 @@ echo $UQSCHOOL
 ```
 These should print your username and school string.
 
+### Install anaconda on Awoonga
+Before we can install Suite2p we will need to install anaconda, agree to the licence (press and hold enter to scroll to bottom of the licence and type yes), use default install locations (just press enter when asked about install locations) and then type yes to initialise miniconda.
+```
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+```
+Now we can remove anaconda's install file and refresh the terminal 
+```
+rm Miniconda3-latest-Linux-x86_64.sh
+source ~/.bashrc
+```
 
 ### Install Suite2p
-We will need to download the code for [Suite2p](https://github.com/Scott-Lab-QBI/suite2p.git), but first we will make sure we are in the home directory, enter the following commands into the terminal window
+We will need to download the code for [Suite2p](https://github.com/Scott-Lab-QBI/suite2p.git) by entering the commands below, first we will make sure we are in the home directory, enter the following commands into the terminal window
 ```
 cd ~/
 git clone https://github.com/Scott-Lab-QBI/suite2p.git
@@ -90,7 +101,7 @@ git clone https://github.com/Scott-Lab-QBI/hpc_pipeline.git
 ## Set up the hpc_pipeline on the command server (Zfish)
 Now that the hpc_pipeline is installed on Awoonga we will also need to also install it on the command server. The command server takes the place of a human checking on the HPC, it will check on the state of the jobs on the HPC and restart jobs when they fail. We will be using the Zfish computer from EAIT. The next few steps will create a second VS code window, one logged into Awoonga and a new window which will be logged into Zfish. You can tell which computer each window is logged into by checking the little green box in the bottom left of the VS code window. The rest of these instructions should be run in the Zfish VS code window, you can close the Awoonga window if you want. 
 
-Repeat the steps listed under the heading "Initially connect VS code to Awoonga" but using the remote server address `uqjarno4-zfish.zones.eait.uq.edu.au`
+Repeat the steps listed under the heading "Initially connect VS code to Awoonga" but using the remote server address `uqjarno4-zfish.zones.eait.uq.edu.au` instead of Awoonga's address.
 
 Now, run the following commands in the terminal to install a copy of the hpc_pipeline on Zfish.
 ```
@@ -106,7 +117,7 @@ source ~/.bashrc
 ```
 
 ### Install anaconda on Zfish
-Before we can install Suite2p we will need to install anaconda, agree to the licence (press and hold enter to scroll to bottom of the licence and type yes), use default install locations (just press enter when asked about install locations) and then type yes to initialise miniconda.
+As before when installing Anaconda, agree to the licence (press and hold enter to scroll to bottom of the licence and type yes), use default install locations (just press enter when asked about install locations) and then type yes to initialise miniconda.
 ```
 wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh
