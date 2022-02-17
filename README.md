@@ -58,16 +58,10 @@ echo $UQSCHOOL
 ```
 These should print your username and school string.
 
-### Install anaconda on Awoonga
-Before we can install Suite2p we will need to install anaconda, agree to the licence (press and hold enter to scroll to bottom of the licence and type yes), use default install locations (just press enter when asked about install locations) and then type yes to initialise miniconda.
+### Set up anaconda on Awoonga
+Anaconda is already installed on Awoonga, all we have to do is activate it
 ```
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh
-```
-Now we can remove anaconda's install file and refresh the terminal 
-```
-rm Miniconda3-latest-Linux-x86_64.sh
-source ~/.bashrc
+conda init bash
 ```
 
 ### Install Suite2p
