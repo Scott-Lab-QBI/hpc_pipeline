@@ -225,6 +225,7 @@ To stop a job from running
 - enter password
 - [Optional] Repeat the above and change Zfish link to `awoonga.qriscloud.org.au` to use ssh keys with Awoonga also
 
+sshkeys on a mac see [here](https://www.mrtechnique.com/how-to-set-up-ssh-keys-on-a-mac/#copy-key)
 
 ### Joining data from two experiments on the same fish (Using symlinks)
 Often a single fish is used in two or more sets of data collections e.g. spontaneous for several minutes as well as an assay of stimuli. In these cases the two data sets can be combined to allow suite2p to join the ROIs between both sets. The script `symlink_data.py` implements this functionality by creating symbolic links (like shortcuts on windows) in a new folder that points to both datasets, suite2p can then be run on this folder of symlinks as if it was one big data collection. 
@@ -238,7 +239,7 @@ Where `/path/to/spontaneous/data` and `/path/to/stimuli/assay` are folders conta
 
 
 ### Permission denied when launching a job
-If you tried to run a launch file (e.g. `./launch_TEMPLATE.sh`) and got a permission denied error, you may need to make the file executable, try the following (substituting the filename for whatever file you were trying to run
+If you tried to run a launch file (e.g. `./launch_TEMPLATE.sh`) and got a permission denied error, you may need to make the here](https://www.mrtechnique.com/how-to-set-up-ssh-keys-on-a-mac/#copy-key)file executable, try the following (substituting the filename for whatever file you were trying to run
 ```
 chmod a+x launch_TEMPLATE.sh
 ```
@@ -248,7 +249,7 @@ You should now be able to execute the file.
 On Zfish run `uq-add-user username`
 
 ### Install magic wormhole to make debugging easier
-conda install -c conda-forge magic-wormhole
+`conda install -c conda-forge magic-wormhole`
 
 ### Install ANTs
 The Advanced Normalisation Tools (ANTs) allow us to warp images so they can be compared within a common space. To install ANTs 
