@@ -92,6 +92,21 @@ cd ~/
 git clone https://github.com/Scott-Lab-QBI/hpc_pipeline.git
 ```
 
+### Get a copy of ANTs
+ANTs has been previously installed to the HPC, all you will need to do is get a copy, the final command here might take 10-15 minutes with no output.
+```
+cd ~/
+cp -r /QRISdata/Q4414/ANTs .
+```
+
+Once you have a copy of ANTs you will need to tell bash where to find ANTs by adding ANTs to your linux PATH
+```
+echo "export ANTSPATH=/home/${UQUSERNAME}/ANTs/bin" >> ~/.bashrc
+echo "export PATH=${ANTSPATH}:$PATH"
+source ~/.bashrc
+```
+
+
 ## Set up the hpc_pipeline on the command server (Zfish)
 Now that the hpc_pipeline is installed on Awoonga we will also need to also install it on the command server. The command server takes the place of a human checking on the HPC, it will check on the state of the jobs on the HPC and restart jobs when they fail. We will be using the Zfish computer from EAIT. The next few steps will create a second VS code window, one logged into Awoonga and a new window which will be logged into Zfish. You can tell which computer each window is logged into by checking the little green box in the bottom left of the VS code window. The rest of these instructions should be run in the Zfish VS code window, you can close the Awoonga window if you want. 
 
@@ -245,7 +260,7 @@ On Zfish run `uq-add-user username`
 ### Install magic wormhole to make debugging easier
 `conda install -c conda-forge magic-wormhole`
 
-### Install ANTs
+### Install ANTs [deprecated - ANTs now needs Cmake3.16 as a minimum]
 The Advanced Normalisation Tools (ANTs) allow us to warp images so they can be compared within a common space. To install ANTs 
 - Log into Awoonga 
 - Enter command `module load CMake/3.15.0-gnu-7.2.0`
