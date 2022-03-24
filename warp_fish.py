@@ -60,7 +60,8 @@ def main():
     ## Create csv of ROIs to be warped (in real space)
     output_csv = os.path.join(ants_output_path, f'ROIs_worldCoords_{fish_num}.csv')
     if not os.path.isfile(output_csv):
-        write_csv(args.s2p_output_path, output_csv)
+        z_step = get_z_step(args.s2p_output_path)
+        write_csv(args.s2p_output_path, output_csv, [1.28, 1.28, z_step])
     else:
         print(f">>>> ROIs csv existed, skipping. output name: {output_csv}")
 

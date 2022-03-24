@@ -58,6 +58,10 @@ for fish_tif in `ls {fish_folder}/*.tif`; do
     /usr/local/bin/recall_medici $fish_tif
 done
 
+export OMP_NUM_THREADS=4
+export NUMBA_NUM_THREADS=4
+export MKL_NUM_THREADS=4
+
 python ~/hpc_pipeline/s2p_fish_sliced.py {fish_folder} {fish_output_folder} {args.s2p_config_json} {args.planes_left_json} ${{PBS_ARRAY_INDEX}}
 """
 
