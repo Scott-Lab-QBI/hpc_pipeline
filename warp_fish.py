@@ -178,7 +178,7 @@ def write_csv(s2p_output_path, output_file, pix_dims=[1.28, 1.28, 5]):
                 y = stat[n]['med'][0]
                 cell_coords = np.array([x, y, i]) * np.array(pix_dims)
                 plane_cells.append(cell_coords)
-        all_cells = np.concatenate((all_cells, np.array(plane_cells)))
+        all_cells = np.concatenate((all_cells, np.reshape(np.array(plane_cells), (-1, 3))))
 
     ## Combine and then write output
     extra = np.zeros((all_cells.shape[0], 3))  # ANTs wants time, label, and comment, zero for all
