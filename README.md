@@ -58,16 +58,10 @@ echo $UQSCHOOL
 ```
 These should print your username and school string.
 
-### Install anaconda on Awoonga
-Before we can install Suite2p we will need to install anaconda, agree to the licence (press and hold enter to scroll to bottom of the licence and type yes), use default install locations (just press enter when asked about install locations) and then type yes to initialise miniconda.
+### Set up anaconda on Awoonga
+Anaconda is already installed on Awoonga, all we have to do is activate it
 ```
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh
-```
-Now we can remove anaconda's install file and refresh the terminal 
-```
-rm Miniconda3-latest-Linux-x86_64.sh
-source ~/.bashrc
+conda init bash
 ```
 
 ### Install Suite2p
@@ -97,6 +91,21 @@ To install the hpc_pipeline on Awoonga we will first need to go back to the home
 cd ~/
 git clone https://github.com/Scott-Lab-QBI/hpc_pipeline.git
 ```
+
+### Get a copy of ANTs
+ANTs has been previously installed to the HPC, all you will need to do is get a copy, the final command here might take 10-15 minutes with no output.
+```
+cd ~/
+cp -r /QRISdata/Q4414/ANTs .
+```
+
+Once you have a copy of ANTs you will need to tell bash where to find ANTs by adding ANTs to your linux PATH
+```
+echo "export ANTSPATH=/home/${UQUSERNAME}/ANTs/bin" >> ~/.bashrc
+echo "export PATH=${ANTSPATH}:$PATH"
+source ~/.bashrc
+```
+
 
 ## Set up the hpc_pipeline on the command server (Zfish)
 Now that the hpc_pipeline is installed on Awoonga we will also need to also install it on the command server. The command server takes the place of a human checking on the HPC, it will check on the state of the jobs on the HPC and restart jobs when they fail. We will be using the Zfish computer from EAIT. The next few steps will create a second VS code window, one logged into Awoonga and a new window which will be logged into Zfish. You can tell which computer each window is logged into by checking the little green box in the bottom left of the VS code window. The rest of these instructions should be run in the Zfish VS code window, you can close the Awoonga window if you want. 
@@ -225,6 +234,7 @@ To stop a job from running
 - enter password
 - [Optional] Repeat the above and change Zfish link to `awoonga.qriscloud.org.au` to use ssh keys with Awoonga also
 
+sshkeys on a mac see [here](https://www.mrtechnique.com/how-to-set-up-ssh-keys-on-a-mac/#copy-key)
 
 ### Joining data from two experiments on the same fish (Using symlinks)
 Often a single fish is used in two or more sets of data collections e.g. spontaneous for several minutes as well as an assay of stimuli. In these cases the two data sets can be combined to allow suite2p to join the ROIs between both sets. The script `symlink_data.py` implements this functionality by creating symbolic links (like shortcuts on windows) in a new folder that points to both datasets, suite2p can then be run on this folder of symlinks as if it was one big data collection. 
@@ -238,7 +248,7 @@ Where `/path/to/spontaneous/data` and `/path/to/stimuli/assay` are folders conta
 
 
 ### Permission denied when launching a job
-If you tried to run a launch file (e.g. `./launch_TEMPLATE.sh`) and got a permission denied error, you may need to make the file executable, try the following (substituting the filename for whatever file you were trying to run
+If you tried to run a launch file (e.g. `./launch_TEMPLATE.sh`) and got a permission denied error, you may need to make the here](https://www.mrtechnique.com/how-to-set-up-ssh-keys-on-a-mac/#copy-key)file executable, try the following (substituting the filename for whatever file you were trying to run
 ```
 chmod a+x launch_TEMPLATE.sh
 ```
@@ -248,9 +258,9 @@ You should now be able to execute the file.
 On Zfish run `uq-add-user username`
 
 ### Install magic wormhole to make debugging easier
-conda install -c conda-forge magic-wormhole
+`conda install -c conda-forge magic-wormhole`
 
-### Install ANTs
+### Install ANTs [deprecated - ANTs now needs Cmake3.16 as a minimum]
 The Advanced Normalisation Tools (ANTs) allow us to warp images so they can be compared within a common space. To install ANTs 
 - Log into Awoonga 
 - Enter command `module load CMake/3.15.0-gnu-7.2.0`

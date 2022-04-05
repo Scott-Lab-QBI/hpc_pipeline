@@ -38,7 +38,8 @@ def main():
 
     ## Warp fish meanImg to template space to get warp matrices
     # Following process in 'register_brains_to_template.ipynb'
-    fixed_image = '/QRISdata/Q2396/ForANTs/MW_Synchotrontemplate.nrrd' # the template
+    #fixed_image = '/QRISdata/Q2396/ForANTs/MW_Synchotrontemplate.nrrd' # the template
+    fixed_image = '/QRISdata/Q4414/MW_Synchotrontemplate.nrrd'
     moved_image = meanImg_stack_nrrd_path
     registration_output_name = os.path.join(ants_output_path, f'antReg_{fish_num}')
     to_template_affine_matrix = f'{registration_output_name}0GenericAffine.mat'
@@ -59,7 +60,8 @@ def main():
     ## Create csv of ROIs to be warped (in real space)
     output_csv = os.path.join(ants_output_path, f'ROIs_worldCoords_{fish_num}.csv')
     if not os.path.isfile(output_csv):
-        write_csv(args.s2p_output_path, output_csv)
+        z_step = get_z_step(args.s2p_output_path)
+        write_csv(args.s2p_output_path, output_csv, [1.28, 1.28, z_step])
     else:
         print(f">>>> ROIs csv existed, skipping. output name: {output_csv}")
 
@@ -76,7 +78,8 @@ def main():
 
 
     ## Warp ROIs to zbrains space
-    to_zbrains_affine_matrix = '/QRISdata/Q2396/ForANTs/Mask_nosedown/MW_To_Zbrain0GenericAffine.mat'
+    #to_zbrains_affine_matrix = '/QRISdata/Q2396/ForANTs/Mask_nosedown/MW_To_Zbrain0GenericAffine.mat'
+    to_zbrains_affine_matrix = '/QRISdata/Q4414/MW_To_Zbrain0GenericAffine.mat'
     warp_image = to_zbrains_affine_matrix.replace('0GenericAffine.mat','1InverseWarp.nii.gz')
     input_coords = templatespace_rois_output_name
     zbrainspace_rois_output_name = os.path.join(ants_output_path, f'ROIs_zbrainspace_{fish_num}.csv')
@@ -175,7 +178,7 @@ def write_csv(s2p_output_path, output_file, pix_dims=[1.28, 1.28, 5]):
                 y = stat[n]['med'][0]
                 cell_coords = np.array([x, y, i]) * np.array(pix_dims)
                 plane_cells.append(cell_coords)
-        all_cells = np.concatenate((all_cells, np.array(plane_cells)))
+        all_cells = np.concatenate((all_cells, np.reshape(np.array(plane_cells), (-1, 3))))
 
     ## Combine and then write output
     extra = np.zeros((all_cells.shape[0], 3))  # ANTs wants time, label, and comment, zero for all
