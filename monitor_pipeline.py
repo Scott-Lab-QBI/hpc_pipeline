@@ -21,13 +21,17 @@ def main():
     ## Process input arguments
     parser = argparse.ArgumentParser(description="Monitor computational jobs on a remote server.")
     parser.add_argument('job_idx', help='The list index of the job to kill', type=str, nargs='?', default='')
+    parser.add_argument('-u', '--user', help='User to query', type=str, nargs='?', default='')
     args = parser.parse_args()
 
     # TODO : Ensure try catch for no file
     #with open(f"/home/{os.getenv('UQUSERNAME')}/hpc_pipeline/controller_data.json", 'r') as fp:
     #    controller_data = json.load(fp)
+    user = USERNAME
+    if args.user:
+        user = args.user
 
-    controller_data = print_status()
+    controller_data = print_status(user)
 
     if not args.job_idx:
         return
@@ -64,9 +68,9 @@ def main():
     #print(f"kill -9 {pid}")
     subprocess.call([f"kill -9 {pid}"], shell=True)
 
-def print_status(do_print=True):
+def print_status(user, do_print=True):
     try:
-        output = str(subprocess.check_output("ps ux | grep hpc_pipeline.py | grep -v grep", shell=True), 'UTF-8')
+        output = str(subprocess.check_output(f"ps -u {user} x | grep hpc_pipeline.py | grep -v grep", shell=True), 'UTF-8')
     except subprocess.CalledProcessError:
         print('No running controllers.')
         return
@@ -76,7 +80,7 @@ def print_status(do_print=True):
         if 'hpc_pipeline.py' in line:
             split = line.split(' ')
             split.remove('')
-            pid = split[1]
+            pid = split[0]
             job_name = line.split(' ')[-1]
             controllers.append((pid, job_name))
 
@@ -87,7 +91,7 @@ def print_status(do_print=True):
             print(f'({i}) {controller[NAMEIDX]}, jobid: {controller[PIDIDX]}')
         
         controllers_dict[i] = (controller, [])
-        fish_states = parse_logs(controller[NAMEIDX])
+        fish_states = parse_logs(user, controller[NAMEIDX])
         for fish_string in fish_states.values():
             if do_print:
                 print(f'    {fish_string}')
@@ -97,10 +101,10 @@ def print_status(do_print=True):
 
     return controllers_dict
 
-def parse_logs(job_name):
+def parse_logs(user, job_name):
     """ Read a log file for a """
     uq_username = os.getenv('UQUSERNAME')
-    log_name = os.path.join(os.path.expanduser('~'), f'hpc_pipeline/logs/{job_name}.log')
+    log_name = f'/home/{user}/hpc_pipeline/logs/{job_name}.log'
     with open(log_name, 'r') as fp:
         log_text = fp.readlines()
     
