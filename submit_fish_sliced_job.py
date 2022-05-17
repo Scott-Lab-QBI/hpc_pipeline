@@ -63,6 +63,8 @@ export NUMBA_NUM_THREADS=4
 export MKL_NUM_THREADS=4
 
 python ~/hpc_pipeline/s2p_fish_sliced.py {fish_folder} {fish_output_folder} {args.s2p_config_json} {args.planes_left_json} ${{PBS_ARRAY_INDEX}}
+
+cp ~/*.o* /QRISdata/Q4414/debug/
 """
 
 
