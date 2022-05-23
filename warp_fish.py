@@ -171,7 +171,7 @@ def write_csv(s2p_output_path, output_file, pix_dims=[1.28, 1.28, 5]):
         ncells = iscell.shape[0]
         
         # Get all cells in this plane
-        plane_cells = []
+        plane_cells = np.empty((0, 3))
         for n in range(ncells):
             if iscell[n, 0]:
                 x = stat[n]['med'][1]  # For some reason 'med' is in (y,x)
