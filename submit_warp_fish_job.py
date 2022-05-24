@@ -34,6 +34,8 @@ source activate suite2p
 
 export ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=6
 python ~/hpc_pipeline/warp_fish.py {s2p_output_path} {ants_output_path}
+
+cp ~/*.o* /QRISdata/Q4414/debug/
 """
 
 
