@@ -21,14 +21,14 @@ users_school = os.getenv('UQSCHOOL')
 file_contents = f"""#!/bin/bash
 #PBS -N {fish_num}_matlab
 #PBS -A {users_school}
-#PBS -l select=1:ncpus=2:mem=16GB:vmem=16GB
+#PBS -l select=1:ncpus=12:mem=64GB:vmem=64GB
 #PBS -l walltime=06:00:00
 #PBS -j oe
 #PBS -k doe
 
-export MATLABPATH="/home/uqjarno4/hpc_pipeline"
+export MATLABPATH="$HOME/matlab_analysis"
 module load matlab
-matlab -nodisplay -nosplash - nodesktop -r "create_single_fish_plots('{pipeline_output_directory}', '{fish_num}'); exit;"
+matlab -nosplash -nodesktop -r "pipeline_core_analysis('{pipeline_output_directory}', '{fish_num}', [1200]); exit;"
 """
 
 

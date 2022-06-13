@@ -98,8 +98,8 @@ def main():
             job.next_job = ants_job
             # And for each ANTs job add a matlab visualisation job
             fish_num = os.path.basename(job.fish_abs_path).split('fish')[1].split('_')[0]
-            #vis_job = VisSingle(ssh, args.output_folder, fish_num)
-            #ants_job.next_job = vis_job
+            vis_job = VisSingle(ssh, args.output_folder, fish_num)
+            ants_job.next_job = vis_job
 
     else:
         print('Job type not recognised.')
@@ -416,8 +416,8 @@ class VisSingle(HPCJob):
     def is_finished(self):
         # Check warped_ROIs_fish%s.gif exists
         # TODO : hardcoding and copied variable names
-        final_gif_filepath = os.path.join(self.pipeline_output_path, f'vis_{self.fish_num}', f'warped_ROIs_fish{self.fish_num}.gif')
-        find_command = f'ls {final_gif_filepath}'
+        final_file_filepath = os.path.join(self.pipeline_output_path, f'analysis_{self.fish_num}', 'analysis_finished.txt')
+        find_command = f'ls {final_file_filepath}'
         logging.info(f'ssh exec: {find_command}')
         stdin, stdout, stderr = self.ssh.exec_command(find_command)
         ls_result = stdout.readlines()
@@ -425,7 +425,7 @@ class VisSingle(HPCJob):
 
         # ls will return the filepath to stdout if exists
         # if not, will print to stderr. 
-        finished = final_gif_filepath in ls_result
+        finished = final_file_filepath in ls_result
 
         if finished: 
             logging.info(f"FISH_STATUS: fish_{self.fish_num}, Finished Visualisation.")
