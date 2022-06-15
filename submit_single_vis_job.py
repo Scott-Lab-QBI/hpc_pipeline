@@ -29,6 +29,8 @@ file_contents = f"""#!/bin/bash
 export MATLABPATH="$HOME/matlab_analysis"
 module load matlab
 matlab -nosplash -nodesktop -r "pipeline_core_analysis('{pipeline_output_directory}', '{fish_num}', [1200]); exit;"
+
+cp *.o* /QRISdata/Q4414/debug/
 """
 
 
