@@ -13,6 +13,8 @@ Follow instructions here [https://rcc.uq.edu.au/awoonga](https://rcc.uq.edu.au/a
 ## Install VS code
 Visual Studio code (VS code) is an integrated development environment built by Microsoft. It allows us to edit code/files on a remote server (like the HPC computers) as if the files were locally stored on our computer. Additionally, it has an integrated terminal which will allow us to execute commands on the HPC, like running the pipeline. 
 
+NOTE: Microsoft has several products called visual studio, make sure it is visual studio *code*
+
 Steps:
 - To install VS code follow the instructions on the VS code website [https://code.visualstudio.com/docs/setup/windows](https://code.visualstudio.com/docs/setup/windows).
 - Once VS code is installed we will also need to install the remote development extension, you can install it using the install button on this [website](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack).
