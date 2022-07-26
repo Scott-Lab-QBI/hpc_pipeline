@@ -177,7 +177,8 @@ def write_csv(s2p_output_path, output_file, pix_dims=[1.28, 1.28, 5]):
                 x = stat[n]['med'][1]  # For some reason 'med' is in (y,x)
                 y = stat[n]['med'][0]
                 cell_coords = np.array([x, y, i]) * np.array(pix_dims)
-                plane_cells.append(cell_coords)
+                #plane_cells.append(cell_coords)
+                plane_cells = np.concatenate((plane_cells, cell_coords))
         all_cells = np.concatenate((all_cells, np.reshape(np.array(plane_cells), (-1, 3))))
 
     ## Combine and then write output
