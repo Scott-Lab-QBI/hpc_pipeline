@@ -36,6 +36,7 @@ def main():
     parser.add_argument('-i', '--input-folder', help='Folder containing input data', type=str)
     parser.add_argument('-o', '--output-folder', help='Folder where output should be saved', type=str)
     parser.add_argument('-a', '--array-id', help='Job ID of a currently running array to watch - for slice arrays only', type=str)
+    parser.add_argument('-p', '--template-prefix', help='Prefix of the template (and warp files) for ANTs in root folder of Q4414', type=str)
     parser.add_argument('-t', '--testing', help='If testing the pipeline, will only run the 5th and 6th fish in a folder', action='store_true')
     parser.add_argument('name', help='A unique name identifying this set of jobs.', type=str)
     args = parser.parse_args()
@@ -82,7 +83,7 @@ def main():
         raise DeprecationWarning()
 
     elif args.job_type == 'ants-zbrain':
-        incomplete_jobs = create_ants_warp_jobs(ssh, args.input_folder, args.output_folder)
+        incomplete_jobs = create_ants_warp_jobs(ssh, args.input_folder, args.output_folder, args.template_prefix)
 
     elif args.job_type == 'full-pipeline':
         # effectively, just create fish-parallel jobs and then tag on ants as next job
@@ -94,7 +95,7 @@ def main():
 
         ## for each ParallelFishs2p job add an ants job as the follow on job
         for job in incomplete_jobs:
-            ants_job = Warp2Zbrains(ssh, job.fish_output_folder, args.output_folder)
+            ants_job = Warp2Zbrains(ssh, job.fish_output_folder, args.output_folder, args.template_prefix)
             job.next_job = ants_job
             # And for each ANTs job add a matlab visualisation job
             fish_num = os.path.basename(job.fish_abs_path).split('fish')[1].split('_')[0]
@@ -174,7 +175,7 @@ def transfer_s2p_args(ssh, exp_name, s2p_config_json):
     logging.info(f"Sent {exp_s2p_filename} to server.")
     return exp_s2p_filename
 
-def create_ants_warp_jobs(ssh, s2p_output_folders, output_folder):
+def create_ants_warp_jobs(ssh, s2p_output_folders, output_folder, template_prefix):
     """ Create a list of ants warping jobs for all s2p output 
     """
     ## Get a list of all fish
@@ -187,7 +188,7 @@ def create_ants_warp_jobs(ssh, s2p_output_folders, output_folder):
     fish_jobs = []
     for fish_base_name in all_fish:
         fish_abs_path = os.path.join(input_folder, fish_base_name)
-        fish_job = Warp2Zbrains(ssh, s2p_output_folders, output_folder)
+        fish_job = Warp2Zbrains(ssh, s2p_output_folders, output_folder, template_prefix)
         fish_jobs.append(fish_job)
     
     logging.info(f'Created several ANTs jobs: {fish_jobs}')
@@ -443,7 +444,7 @@ class Warp2Zbrains(HPCJob):
             - warp points again to zbrain
     """
 
-    def __init__(self, ssh, s2p_output_path, base_output_folder):
+    def __init__(self, ssh, s2p_output_path, base_output_folder, template_prefix):
         """ 
         Args:
             ssh: An open ssh connection
@@ -455,12 +456,13 @@ class Warp2Zbrains(HPCJob):
         super().__init__(ssh)
         self.s2p_output_path = s2p_output_path
         self.base_output_folder = base_output_folder
+        self.tempalte_prefix = template_prefix
         fish_folder_name = s2p_output_path.split('suite2p_')[1]
         self.ants_output_path = os.path.join(base_output_folder, f'ants_{fish_folder_name}')
 
     def start_job(self):
         ## Launch and check array
-        launch_job = f'python ~/hpc_pipeline/submit_warp_fish_job.py {self.s2p_output_path} {self.ants_output_path}'
+        launch_job = f'python ~/hpc_pipeline/submit_warp_fish_job.py {self.s2p_output_path} {self.ants_output_path} {self.tempalte_prefix}'
 
         self.do_qsub_check_errors(launch_job)
 

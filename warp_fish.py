@@ -17,9 +17,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('s2p_output_path', help="Absolute path to the directory of s2p output")
     parser.add_argument('output_directory', help="Absolute path to a folder that ants output will be written to.")
+    parser.add_argument('template_prefix', help="Prefix of the template to use stored in root directory of Q4414 RDM")
     args = parser.parse_args()
 
     fish_num = os.path.basename(args.s2p_output_path).split('fish')[1].split('_')[0]
+    template_prefix = args.template_prefix
 
     ## if folder doesn't exist, create it
     ants_output_path = args.output_directory
@@ -39,7 +41,8 @@ def main():
     ## Warp fish meanImg to template space to get warp matrices
     # Following process in 'register_brains_to_template.ipynb'
     #fixed_image = '/QRISdata/Q2396/ForANTs/MW_Synchotrontemplate.nrrd' # the template
-    fixed_image = '/QRISdata/Q4414/MW_Synchotrontemplate.nrrd'
+    #fixed_image = '/QRISdata/Q4414/MW_Synchotrontemplate.nrrd'
+    fixed_image = f'/QRISdata/Q4414/{template_prefix}template0.nrrd'
     moved_image = meanImg_stack_nrrd_path
     registration_output_name = os.path.join(ants_output_path, f'antReg_{fish_num}')
     to_template_affine_matrix = f'{registration_output_name}0GenericAffine.mat'
@@ -79,7 +82,8 @@ def main():
 
     ## Warp ROIs to zbrains space
     #to_zbrains_affine_matrix = '/QRISdata/Q2396/ForANTs/Mask_nosedown/MW_To_Zbrain0GenericAffine.mat'
-    to_zbrains_affine_matrix = '/QRISdata/Q4414/MW_To_Zbrain0GenericAffine.mat'
+    #to_zbrains_affine_matrix = '/QRISdata/Q4414/MW_To_Zbrain0GenericAffine.mat'
+    to_zbrains_affine_matrix = f'/QRISdata/Q4414/{template_prefix}0GenericAffine.mat'
     warp_image = to_zbrains_affine_matrix.replace('0GenericAffine.mat','1InverseWarp.nii.gz')
     input_coords = templatespace_rois_output_name
     zbrainspace_rois_output_name = os.path.join(ants_output_path, f'ROIs_zbrainspace_{fish_num}.csv')
