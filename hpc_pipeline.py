@@ -14,7 +14,7 @@ import shutil
 import datetime
 
 # How long to wait before checking on running jobs in seconds
-WAITTIME = 6 * 60 * 60
+WAITTIME = 6 * 60 * 60 
 # HPC ssh address to use, get from env variables or default to awoonga
 HPCHOSTNAME=os.getenv('HPCHOSTNAME', 'awoonga.qriscloud.org.au')
 # HPC user account to use, set as environment variable
@@ -22,7 +22,7 @@ USERNAME=os.getenv('UQUSERNAME')
 assert USERNAME is not None, "Could not get username from Environment"
 # Version
 HPCPIPELINEVERSION=1.0
-# Folder where any data ish files should go (e.g. planes_left)
+# Folder where any data files should go (e.g. planes_left)
 DATADIR=os.path.join(os.path.expanduser('~'), 'hpc_pipeline/data')
 HPCDATADIR=f'/home/{USERNAME}/hpc_pipeline/data'
 
@@ -164,6 +164,16 @@ def main():
 
 
 def transfer_s2p_args(ssh, exp_name, s2p_config_json):
+    """ Send suite2p arguments to the remote server
+
+    Arguments:
+        ssh: The ssh connection to the server for jobs to run on
+        exp_name: Unique name of currently running experiment
+        s2p_config_json: Path to json file containing s2p attributes to use
+
+    Returns:
+        relative path to where the suite2p config file will exist on remote
+    """
     ## Create an experiment specific copy of s2p_ops 
     exp_s2p_filename = os.path.join(DATADIR, f'{exp_name}_{os.path.basename(s2p_config_json)}')
     hpc_exp_s2p_filename = os.path.join(HPCDATADIR, f'{exp_name}_{os.path.basename(s2p_config_json)}')
@@ -177,6 +187,15 @@ def transfer_s2p_args(ssh, exp_name, s2p_config_json):
 
 def create_ants_warp_jobs(ssh, s2p_output_folders, output_folder, template_prefix):
     """ Create a list of ants warping jobs for all s2p output 
+
+    Arguments:
+        ssh: The ssh connection to the server for jobs to run on
+        s2p_output_folders: path where suite2p output was saved
+        output_folder: path where ANTs output should be saved
+        template_prefix: prefix of which ANTs template to use
+
+    Returns:
+        list of Warp2Zbrains objects detailing warping to run
     """
     ## Get a list of all fish
     ls_fish = f'ls {input_folder}'
@@ -354,6 +373,14 @@ class HPCJob:
         raise NotImplementedError
 
     def do_qsub_check_errors(self, launch_cmd):
+        """ Start a job on the remote server
+
+        Arguments:
+            launch_cmd: the command that should be run on the remote server
+
+        Returns:
+            The job ID assigned to the launched job
+        """
         logging.info(f'ssh exec: {launch_cmd}')
         # Actually send job to awoonga
         stdin, stdout, stderr = self.ssh.exec_command(launch_cmd)
@@ -378,13 +405,11 @@ class HPCJob:
         raise NotImplementedError
 
     def followed_by(self, job):
-        """
+        """ The HPCJob object to be run after this
         """
         self.next_job = job
 
     def get_next_job(self):
-        """
-        """
         return self.next_job
 
     def __str__(self):
@@ -397,12 +422,16 @@ class HPCJob:
         pass
 
 class VisSingle(HPCJob):
+    """ Run scripts to visualise the outputs after Suite2p and ANTs have run. 
+    """
     def __init__(self, ssh, pipeline_output_path, fish_num):
         super().__init__(ssh)
         self.pipeline_output_path = pipeline_output_path
         self.fish_num = fish_num
 
     def start_job(self):
+        """ Launch visualisation job on HPC
+        """
         launch_job = f'python ~/hpc_pipeline/submit_single_vis_job.py {self.pipeline_output_path} {self.fish_num}'
 
         self.do_qsub_check_errors(launch_job)
@@ -415,8 +444,10 @@ class VisSingle(HPCJob):
         logging.info(f"FISH_STATUS: fish_{self.fish_num}, Matlab Vis, Latest HPC id: {self.get_latest_job_id()}")
 
     def is_finished(self):
+        """ Verify if the visualisation have finished by checking the 
+            existance of a flag file.
+        """
         # Check warped_ROIs_fish%s.gif exists
-        # TODO : hardcoding and copied variable names
         final_file_filepath = os.path.join(self.pipeline_output_path, f'analysis_{self.fish_num}', 'analysis_finished.txt')
         find_command = f'ls {final_file_filepath}'
         logging.info(f'ssh exec: {find_command}')
@@ -671,7 +702,7 @@ class SlicedFishs2p(HPCJob):
     """ Run a sliced fish through suite2p using arguments from specified config
         file 
     """
-    FILESPERSLICE = 9 # TODO : might change if data.bin is saved also. 
+    FILESPERSLICE = 9 
     def __init__(self, ssh, slice_folder, base_output_folder, s2p_config_json, exp_name):
         """ 
         Args:

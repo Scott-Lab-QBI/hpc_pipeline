@@ -40,8 +40,6 @@ def main():
 
     ## Warp fish meanImg to template space to get warp matrices
     # Following process in 'register_brains_to_template.ipynb'
-    #fixed_image = '/QRISdata/Q2396/ForANTs/MW_Synchotrontemplate.nrrd' # the template
-    #fixed_image = '/QRISdata/Q4414/MW_Synchotrontemplate.nrrd'
     fixed_image = f'/QRISdata/Q4414/{template_prefix}template0.nrrd'
     moved_image = meanImg_stack_nrrd_path
     registration_output_name = os.path.join(ants_output_path, f'antReg_{fish_num}')
@@ -81,8 +79,6 @@ def main():
 
 
     ## Warp ROIs to zbrains space
-    #to_zbrains_affine_matrix = '/QRISdata/Q2396/ForANTs/Mask_nosedown/MW_To_Zbrain0GenericAffine.mat'
-    #to_zbrains_affine_matrix = '/QRISdata/Q4414/MW_To_Zbrain0GenericAffine.mat'
     to_zbrains_affine_matrix = f'/QRISdata/Q4414/{template_prefix}0GenericAffine.mat'
     warp_image = to_zbrains_affine_matrix.replace('0GenericAffine.mat','1InverseWarp.nii.gz')
     input_coords = templatespace_rois_output_name
@@ -96,13 +92,15 @@ def main():
 
 
 def get_z_step(foldername):
-    ## Specific work around to keep mecp2 running, 
-    ## new requirement will be to keep filenames similar to original recording folders
-    ## Delete after mecp2's done processing.
-    if 'symlinked' in foldername:
-        print(">>>>>   HACK for original MECP2's which don't have step in filename   <<<<<<")
-        mecp2_step_size = 5
-        return mecp2_step_size
+    """ Parse the filename to find the step value, needed to ensure the ANTs 
+        warping is done done in real world coordinates.
+
+    Arguments:
+        foldername: Path to fish raw data with stepX in the name
+
+    Returns: 
+        The step sized used by the lazer in microns
+    """
 
     if 'step' in foldername:
         z_step=int(foldername.split('step')[-1].split('_')[0]) # Takes the second instance in ones where it's been inputted twice
@@ -116,6 +114,10 @@ def get_z_step(foldername):
 def make_meanImg_stack(s2p_output_path, output_nrrd):
     """ Given the folder of fish s2p output make a single 3D stack of the
         meanImage from each plane.
+    
+    Arguments: 
+        s2p_output_path: Path to where suite2p output was saved
+        output_nrrd: name of the output file to create
     """
     all_folders = glob.glob(os.path.join(s2p_output_path, 'plane*'))
     # Remove combined folder 
@@ -153,6 +155,11 @@ def make_meanImg_stack(s2p_output_path, output_nrrd):
 
 def write_csv(s2p_output_path, output_file, pix_dims=[1.28, 1.28, 5]):
     """ Create a csv file will all ROIs for the fish
+
+    Arguments: 
+        s2p_output_path: Path to where suite2p output was saved
+        output_file: name of the output file to create 
+        pix_dims: Dimensions of a single pixel (voxel) from the microscope
     """
     planes = glob.glob(os.path.join(s2p_output_path, 'plane*'))
     # Sort folders based on digits after plane

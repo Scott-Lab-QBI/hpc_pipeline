@@ -24,9 +24,7 @@ def main():
     parser.add_argument('-u', '--user', help='User to query', type=str, nargs='?', default='')
     args = parser.parse_args()
 
-    # TODO : Ensure try catch for no file
-    #with open(f"/home/{os.getenv('UQUSERNAME')}/hpc_pipeline/controller_data.json", 'r') as fp:
-    #    controller_data = json.load(fp)
+    # Specify a user other than current user
     user = USERNAME
     if args.user:
         user = args.user
@@ -69,6 +67,12 @@ def main():
     subprocess.call([f"kill -9 {pid}"], shell=True)
 
 def print_status(user, do_print=True):
+    """ Helper function to allow pretty printing of the state of the queue.
+
+    Arguments:
+        user: the user to check for jobs
+        do_print: Optionally don't print
+    """
     try:
         output = str(subprocess.check_output(f"ps -u {user} x | grep hpc_pipeline.py | grep -v grep", shell=True), 'UTF-8')
     except subprocess.CalledProcessError:
@@ -102,7 +106,15 @@ def print_status(user, do_print=True):
     return controllers_dict
 
 def parse_logs(user, job_name):
-    """ Read a log file for a """
+    """ Read a log file for the current state of jobs on the remote server
+
+    Arguments:
+        user: The user to query jobs for
+        job_name: The name of the job ot search the logs of
+
+    Returns:
+        The state of all fish in the log file
+    """
     uq_username = os.getenv('UQUSERNAME')
     log_name = f'/home/{user}/hpc_pipeline/logs/{job_name}.log'
     with open(log_name, 'r') as fp:
